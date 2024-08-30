@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="/plugins/field_annotations">
+    <file>icons/import_photo.png</file>
+    <file>icons/draw_point.png</file>
+    <file>icons/take_photo.png</file>
+    <file>icons/draw_polygon.png</file>
+    <file>icons/draw_line.png</file>
+  </qresource>
+</RCC>
