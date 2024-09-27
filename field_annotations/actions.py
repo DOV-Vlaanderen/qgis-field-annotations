@@ -1,4 +1,5 @@
 from qgis.PyQt import QtWidgets, QtGui
+from qgis.core import QgsProject
 
 from .translate import Translatable
 
@@ -11,6 +12,8 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         self.setIcon(QtGui.QIcon(self.getIconPath()))
         self.setToolTip(self.getToolTipText())
 
+        self.connectPopulate()
+
         self.clicked.connect(self.run)
         self.populate()
 
@@ -20,8 +23,23 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
     def getToolTipText(self):
         raise NotImplementedError
 
+    def connectPopulate(self):
+        QgsProject.instance().cleared.connect(self.populate)
+        QgsProject.instance().readProject.connect(self.populate)
+        QgsProject.instance().layersAdded.connect(self.populate)
+        QgsProject.instance().layersRemoved.connect(self.populate)
+
     def populate(self):
-        self.setEnabled(True)
+        hasLayers = len(QgsProject.instance().mapLayers()) > 0
+
+        if hasLayers:
+            self.setEnabled(True)
+            self.setToolTip(self.getToolTipText())
+        else:
+            self.setEnabled(False)
+            self.setToolTip(
+                self.tr('No layers available to annotate, add a layer first.'))
+
 
     def run(self):
         raise NotImplementedError
