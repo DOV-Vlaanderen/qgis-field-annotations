@@ -17,3 +17,5 @@ class Config(QtCore.QObject, Translatable):
         """
         super().__init__()
         self.main = main
+
+        self.annotationFileName = '{}-qgis-field-annotations.gpkg'

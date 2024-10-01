@@ -1,6 +1,7 @@
 from qgis.PyQt import QtWidgets, QtGui
 from qgis.core import QgsProject
 
+from .annotate import PolygonAnnotator, PointAnnotator, LineAnnotator
 from .translate import Translatable
 
 
@@ -11,6 +12,7 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         self.main = main
         self.setIcon(QtGui.QIcon(self.getIconPath()))
         self.setToolTip(self.getToolTipText())
+        self.setCheckable(True)
 
         self.connectPopulate()
 
@@ -24,30 +26,51 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         raise NotImplementedError
 
     def connectPopulate(self):
-        QgsProject.instance().cleared.connect(self.populate)
-        QgsProject.instance().readProject.connect(self.populate)
-        QgsProject.instance().layersAdded.connect(self.populate)
-        QgsProject.instance().layersRemoved.connect(self.populate)
+        projectInstance = QgsProject.instance()
+
+        projectInstance.cleared.connect(self.populate)
+        projectInstance.readProject.connect(self.populate)
+        projectInstance.projectSaved.connect(self.populate)
+        projectInstance.layersAdded.connect(self.populate)
+        projectInstance.layersRemoved.connect(self.populate)
+        self.main.annotationState.stateChanged.connect(self.populate)
 
     def populate(self):
         hasLayers = len(QgsProject.instance().mapLayers()) > 0
+        hasProjectPath = len(QgsProject.instance().absolutePath()) > 0
 
-        if hasLayers:
+        print('is annotating', self.main.annotationState.isAnnotating)
+
+        if hasLayers and hasProjectPath and not self.main.annotationState.isAnnotating:
             self.setEnabled(True)
             self.setToolTip(self.getToolTipText())
+        elif not hasProjectPath:
+            self.setEnabled(False)
+            self.setToolTip(
+                self.tr('Cannot annotate without project, save your project first.'))
+        elif hasLayers:
+            self.setEnabled(False)
+            self.setToolTip(
+                self.tr('Already annotating, finish annotation first.'))
         else:
             self.setEnabled(False)
             self.setToolTip(
                 self.tr('No layers available to annotate, add a layer first.'))
 
-
     def run(self):
-        raise NotImplementedError
+        self.setChecked(True)
+        self.main.annotationState.setAnnotating(True)
+
+        self.annotator.createAnnotation()
+
+        self.main.annotationState.setAnnotating(False)
+        self.setChecked(False)
 
 
 class AnnotatePolygonButton(AbstractToolbarButton, Translatable):
     def __init__(self, main, parent=None):
         super().__init__(main, parent)
+        self.annotator = PolygonAnnotator(main)
 
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_polygon.png'
@@ -55,13 +78,11 @@ class AnnotatePolygonButton(AbstractToolbarButton, Translatable):
     def getToolTipText(self):
         return self.tr('Add a polygon annotation')
 
-    def run(self):
-        print('add polygon annotation')
-
 
 class AnnotateLineButton(AbstractToolbarButton, Translatable):
     def __init__(self, main, parent=None):
         super().__init__(main, parent)
+        self.annotator = LineAnnotator(main)
 
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_line.png'
@@ -69,19 +90,13 @@ class AnnotateLineButton(AbstractToolbarButton, Translatable):
     def getToolTipText(self):
         return self.tr('Add a line annotation')
 
-    def run(self):
-        print('add line annotation')
-
-
 class AnnotatePointButton(AbstractToolbarButton, Translatable):
     def __init__(self, main, parent=None):
         super().__init__(main, parent)
+        self.annotator = PointAnnotator(main)
 
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_point.png'
 
     def getToolTipText(self):
         return self.tr('Add a point annotation')
-
-    def run(self):
-        print('add point annotation')

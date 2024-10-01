@@ -23,12 +23,15 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
-
 # Initialize Qt resources from file resources.py
 from .resources import *
-# Import the code for the dialog
+
+from .field_annotations.annotate import AnnotationState
+from .field_annotations.config import Config
+from .field_annotations.data import AnnotationDb
 from .field_annotations.toolbar import FieldAnnotationsToolbar
 from .field_annotations.translate import Translatable
+
 import os.path
 
 
@@ -63,6 +66,10 @@ class FieldAnnotations(Translatable):
 
         # Declare instance attributes
         self.toolbar = None
+
+        self.config = Config(self)
+        self.annotationState = AnnotationState(self)
+        self.annotationDb = AnnotationDb(self)
 
     def initGui(self):
         """Create the dialog and the toolbar."""
