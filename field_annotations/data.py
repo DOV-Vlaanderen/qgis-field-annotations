@@ -2,10 +2,8 @@ import os
 
 from qgis.PyQt import QtCore
 from qgis.core import (QgsFields, QgsField, QgsCoordinateReferenceSystem,
-                       QgsVectorFileWriter, QgsCoordinateTransformContext)
+                       QgsVectorFileWriter, QgsCoordinateTransformContext, QgsVectorLayer, QgsDataProvider)
 from qgis.core import QgsProject
-
-from osgeo import ogr
 
 
 class AnnotationDb:
@@ -45,7 +43,6 @@ class AnnotationDb:
             if fileExists:
                 options.actionOnExistingFile = QgsVectorFileWriter.ActionOnExistingFile.CreateOrOverwriteLayer
 
-            print(self.dbPath)
             QgsVectorFileWriter.create(
                 fileName=self.dbPath,
                 fields=schema,
@@ -62,7 +59,9 @@ class AnnotationDb:
             createNewGpkgLayer(layerName, geometryType, fileExists=False)
         else:
             # check if layer already exists
-            layers = [l.GetName() for l in ogr.Open(self.dbPath)]
+            db = QgsVectorLayer(self.dbPath, "test", "ogr")
+            layers = [l.split(QgsDataProvider.SUBLAYER_SEPARATOR)[1]
+                      for l in db.dataProvider().subLayers()]
 
             if layerName not in layers:
                 createNewGpkgLayer(layerName, geometryType, fileExists=True)
