@@ -1,7 +1,8 @@
 from qgis.PyQt import QtCore
 
-from qgis.core import QgsWkbTypes
+from qgis.core import QgsWkbTypes, QgsExpressionContextUtils
 
+from .translate import Translatable
 
 class AnnotationState(QtCore.QObject):
     stateChanged = QtCore.pyqtSignal()
@@ -23,9 +24,14 @@ class AbstractAnnotator:
         self.main = main
 
     def getLayer(self):
-        return self.main.annotationDb.getLayer(self.getLayerName(), self.getGeometryType())
+        layer = self.main.annotationDb.getLayer(
+            self.getLayerName(), self.getHumanLayerName(), self.getGeometryType())
+        self.main.annotationView.addLayer(layer)
 
     def getLayerName(self):
+        raise NotImplementedError
+
+    def getHumanLayerName(self):
         raise NotImplementedError
 
     def getGeometryType(self):
@@ -35,12 +41,15 @@ class AbstractAnnotator:
         raise NotImplementedError
 
 
-class PointAnnotator(AbstractAnnotator):
+class PointAnnotator(AbstractAnnotator, Translatable):
     def __init__(self, main):
         super().__init__(main)
 
     def getLayerName(self):
         return 'pointAnnotation'
+
+    def getHumanLayerName(self):
+        return self.tr('Point annotations')
 
     def getGeometryType(self):
         return QgsWkbTypes.Point
@@ -50,12 +59,15 @@ class PointAnnotator(AbstractAnnotator):
         print('creating point annotation')
 
 
-class LineAnnotator(AbstractAnnotator):
+class LineAnnotator(AbstractAnnotator, Translatable):
     def __init__(self, main):
         super().__init__(main)
 
     def getLayerName(self):
         return 'lineAnnotation'
+
+    def getHumanLayerName(self):
+        return self.tr('Line annotations')
 
     def getGeometryType(self):
         return QgsWkbTypes.LineString
@@ -65,16 +77,20 @@ class LineAnnotator(AbstractAnnotator):
         print('creating line annotation')
 
 
-class PolygonAnnotator(AbstractAnnotator):
+class PolygonAnnotator(AbstractAnnotator, Translatable):
     def __init__(self, main):
         super().__init__(main)
 
     def getLayerName(self):
         return 'polygonAnnotation'
 
+    def getHumanLayerName(self):
+        return self.tr('Polygon annotations')
+
     def getGeometryType(self):
         return QgsWkbTypes.Polygon
 
     def createAnnotation(self):
         layer = self.getLayer()
-        print('creating polygon annotation')
+        # author = QgsExpressionContextUtils.globalScope().variable('user_full_name')
+        print(f'creating polygon annotation in layer {layer}')

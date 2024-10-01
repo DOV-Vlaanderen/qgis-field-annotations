@@ -27,12 +27,14 @@ class AnnotationDb:
         else:
             self.dbPath = None
 
-    def createLayer(self, layerName, geometryType):
+    def getLayer(self, layerName, humanLayerName, geometryType):
         def createNewGpkgLayer(layerName, geometryType, fileExists):
             schema = QgsFields()
 
             schema.append(QgsField('layer', QtCore.QVariant.String))
             schema.append(QgsField('annotation', QtCore.QVariant.String))
+            schema.append(QgsField('dateCreated', QtCore.QVariant.DateTime))
+            schema.append(QgsField('author', QtCore.QVariant.String))
             schema.append(QgsField('photoLocation', QtCore.QVariant.String))
 
             crs = QgsCoordinateReferenceSystem('epsg:4326')
@@ -53,12 +55,12 @@ class AnnotationDb:
 
         if self.dbPath is None:
             raise RuntimeError(
-                'Cannot create annotation layer without project.')
+                'Cannot get annotation layer without project.')
 
         if not os.path.exists(self.dbPath):
             createNewGpkgLayer(layerName, geometryType, fileExists=False)
         else:
-            # check if layer already exists
+            # check if layer already exists in database
             db = QgsVectorLayer(self.dbPath, "test", "ogr")
             layers = [l.split(QgsDataProvider.SUBLAYER_SEPARATOR)[1]
                       for l in db.dataProvider().subLayers()]
@@ -66,5 +68,4 @@ class AnnotationDb:
             if layerName not in layers:
                 createNewGpkgLayer(layerName, geometryType, fileExists=True)
 
-    def getLayer(self, layerName, geometryType):
-        self.createLayer(layerName, geometryType)
+        return QgsVectorLayer(f'{self.dbPath}|layername={layerName}', humanLayerName, "ogr")

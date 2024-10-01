@@ -29,6 +29,7 @@ from .resources import *
 from .field_annotations.annotate import AnnotationState
 from .field_annotations.config import Config
 from .field_annotations.data import AnnotationDb
+from .field_annotations.mapview import AnnotationView
 from .field_annotations.toolbar import FieldAnnotationsToolbar
 from .field_annotations.translate import Translatable
 
@@ -70,6 +71,7 @@ class FieldAnnotations(Translatable):
         self.config = Config(self)
         self.annotationState = AnnotationState(self)
         self.annotationDb = AnnotationDb(self)
+        self.annotationView = AnnotationView(self)
 
     def initGui(self):
         """Create the dialog and the toolbar."""
