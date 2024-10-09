@@ -2,7 +2,7 @@ from enum import Enum
 import time
 from qgis.PyQt import QtCore
 
-from qgis.core import QgsWkbTypes, QgsExpressionContextUtils
+from qgis.core import QgsWkbTypes, QgsExpressionContextUtils, QgsEditFormConfig
 
 from .translate import Translatable
 
@@ -62,25 +62,38 @@ class AbstractAnnotator:
         self.main.annotationState.setCurrentAnnotationType(
             self.getAnnotationType())
 
+        formConfig = layer.editFormConfig()
+        formConfig.setSuppress(QgsEditFormConfig.SuppressOn)
+        layer.setEditFormConfig(formConfig)
+
         if not layer.isEditable():
             layer.startEditing()
 
-        layer.afterRollBack.connect(self.stopAnnotate)
-        layer.afterCommitChanges.connect(self.stopAnnotate)
+        layer.afterRollBack.connect(self.endAnnotate)
+        layer.afterCommitChanges.connect(self.endAnnotate)
 
         self.main.iface.setActiveLayer(layer)
         self.main.iface.actionAddFeature().trigger()
 
-    def saveAnnotations(self):
+        mapToolDigitize = self.main.iface.mapCanvas().mapTool()
+        mapToolDigitize.digitizingCompleted.connect(self.featureAdded)
+
+    def featureAdded(self, feature):
+        print('feature added', feature, feature.id())
+        layer = self.getLayer()
+        feature.setAttribute(layer.fields().indexOf('author'), 'Roel')
+        layer.dataProvider().addFeatures([feature])
+
+    def stopAnnotating(self):
         layer = self.getLayer()
         if layer.isEditable():
-            layer.commitChanges()
+            layer.rollBack()
 
-    def stopAnnotate(self):
+    def endAnnotate(self):
         layer = self.getLayer()
 
-        layer.afterRollBack.disconnect(self.stopAnnotate)
-        layer.afterCommitChanges.disconnect(self.stopAnnotate)
+        layer.afterRollBack.disconnect(self.endAnnotate)
+        layer.afterCommitChanges.disconnect(self.endAnnotate)
 
         if layer.isEditable():
             layer.endEditCommand()

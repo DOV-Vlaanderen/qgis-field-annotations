@@ -68,7 +68,7 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         if not self.main.annotationState.isAnnotating:
             self.annotator.createAnnotation()
         else:
-            self.annotator.saveAnnotations()
+            self.annotator.stopAnnotating()
 
 
 class AnnotatePolygonButton(AbstractToolbarButton, Translatable):
