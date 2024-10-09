@@ -6,10 +6,12 @@ from .translate import Translatable
 
 
 class AbstractToolbarButton(QtWidgets.QToolButton):
-    def __init__(self, main, parent=None):
+    def __init__(self, main, annotator, parent=None):
         QtWidgets.QToolButton.__init__(self, parent)
 
         self.main = main
+        self.annotator = annotator
+
         self.setIcon(QtGui.QIcon(self.getIconPath()))
         self.setToolTip(self.getToolTipText())
         self.setCheckable(True)
@@ -39,6 +41,9 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         hasLayers = len(QgsProject.instance().mapLayers()) > 0
         hasProjectPath = len(QgsProject.instance().absolutePath()) > 0
 
+        self.setChecked(self.main.annotationState.currentAnnotationType ==
+                        self.annotator.getAnnotationType())
+
         if hasLayers and hasProjectPath and not self.main.annotationState.isAnnotating:
             self.setEnabled(True)
             self.setToolTip(self.getToolTipText())
@@ -61,17 +66,15 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
 
     def run(self):
         if not self.main.annotationState.isAnnotating:
-            self.setChecked(True)
             self.annotator.createAnnotation()
         else:
-            self.setChecked(False)
             self.annotator.saveAnnotations()
 
 
 class AnnotatePolygonButton(AbstractToolbarButton, Translatable):
     def __init__(self, main, parent=None):
-        super().__init__(main, parent)
-        self.annotator = PolygonAnnotator(main)
+        annotator = PolygonAnnotator(main)
+        super().__init__(main, annotator, parent)
 
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_polygon.png'
@@ -82,8 +85,8 @@ class AnnotatePolygonButton(AbstractToolbarButton, Translatable):
 
 class AnnotateLineButton(AbstractToolbarButton, Translatable):
     def __init__(self, main, parent=None):
-        super().__init__(main, parent)
-        self.annotator = LineAnnotator(main)
+        annotator = LineAnnotator(main)
+        super().__init__(main, annotator, parent)
 
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_line.png'
@@ -93,8 +96,8 @@ class AnnotateLineButton(AbstractToolbarButton, Translatable):
 
 class AnnotatePointButton(AbstractToolbarButton, Translatable):
     def __init__(self, main, parent=None):
-        super().__init__(main, parent)
-        self.annotator = PointAnnotator(main)
+        annotator = PointAnnotator(main)
+        super().__init__(main, annotator, parent)
 
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_point.png'

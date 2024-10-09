@@ -65,6 +65,9 @@ class AbstractAnnotator:
         if not layer.isEditable():
             layer.startEditing()
 
+        layer.afterRollBack.connect(self.stopAnnotate)
+        layer.afterCommitChanges.connect(self.stopAnnotate)
+
         self.main.iface.setActiveLayer(layer)
         self.main.iface.actionAddFeature().trigger()
 
@@ -72,8 +75,15 @@ class AbstractAnnotator:
         layer = self.getLayer()
         if layer.isEditable():
             layer.commitChanges()
-            layer.endEditCommand()
 
+    def stopAnnotate(self):
+        layer = self.getLayer()
+
+        layer.afterRollBack.disconnect(self.stopAnnotate)
+        layer.afterCommitChanges.disconnect(self.stopAnnotate)
+
+        if layer.isEditable():
+            layer.endEditCommand()
         self.main.annotationState.clearCurrentAnnotationType()
 
 
