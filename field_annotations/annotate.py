@@ -3,9 +3,10 @@ import time
 from qgis.PyQt import QtCore
 
 from qgis.core import QgsWkbTypes, QgsExpressionContextUtils, QgsEditFormConfig
+from qgis.gui import QgsMapToolDigitizeFeature
 
 from .translate import Translatable
-
+from .dialog import NewAnnotationDialog
 
 class AnnotationType(Enum):
     Point = 1
@@ -77,12 +78,18 @@ class AbstractAnnotator:
 
         mapToolDigitize = self.main.iface.mapCanvas().mapTool()
         mapToolDigitize.digitizingCompleted.connect(self.featureAdded)
+        self.main.iface.mapCanvas().setMapTool(mapToolDigitize)
 
     def featureAdded(self, feature):
         print('feature added', feature, feature.id())
         layer = self.getLayer()
-        feature.setAttribute(layer.fields().indexOf('author'), 'Roel')
-        layer.dataProvider().addFeatures([feature])
+
+        dlg = NewAnnotationDialog(self.main, feature)
+        result = dlg.exec()
+
+        if result == 1:
+            feature.setAttribute(layer.fields().indexOf('author'), 'Roel')
+            layer.dataProvider().addFeatures([feature])
 
     def stopAnnotating(self):
         layer = self.getLayer()
@@ -94,6 +101,9 @@ class AbstractAnnotator:
 
         layer.afterRollBack.disconnect(self.endAnnotate)
         layer.afterCommitChanges.disconnect(self.endAnnotate)
+
+        mapToolDigitize = self.main.iface.mapCanvas().mapTool()
+        mapToolDigitize.digitizingCompleted.disconnect(self.featureAdded)
 
         if layer.isEditable():
             layer.endEditCommand()
