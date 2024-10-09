@@ -92,13 +92,15 @@ class AnnotationView(Translatable):
     def __init__(self, main):
         self.main = main
 
-    def hasLayer(self, layer):
-        layers = QgsProject.instance().mapLayers().values()
+    def findLayer(self, layer):
+        projectLayers = QgsProject.instance().mapLayers().values()
 
-        return layer.dataProvider().dataSourceUri() in [
-            layer.dataProvider().dataSourceUri()
-            for layer in layers if layer.dataProvider() is not None
-        ]
+        for projectLayer in projectLayers:
+            if projectLayer.dataProvider().dataSourceUri() == layer.dataProvider().dataSourceUri():
+                return projectLayer
+
+    def hasLayer(self, layer):
+        return self.findLayer(layer) is not None
 
     def addLayer(self, layer):
         if not self.hasLayer(layer):
@@ -113,3 +115,6 @@ class AnnotationView(Translatable):
 
             AnnotationLayerStyler.styleLayer(layer)
             annotationGroup.addLayer(layer)
+            return layer
+        else:
+            return self.findLayer(layer)

@@ -39,32 +39,33 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         hasLayers = len(QgsProject.instance().mapLayers()) > 0
         hasProjectPath = len(QgsProject.instance().absolutePath()) > 0
 
-        print('is annotating', self.main.annotationState.isAnnotating)
-
         if hasLayers and hasProjectPath and not self.main.annotationState.isAnnotating:
             self.setEnabled(True)
             self.setToolTip(self.getToolTipText())
+        elif hasLayers and hasProjectPath and self.main.annotationState.isAnnotating:
+            self.setEnabled(
+                self.main.annotationState.currentAnnotationType == self.annotator.getAnnotationType())
+            if self.isEnabled():
+                self.setToolTip(self.getToolTipText())
+            else:
+                self.setToolTip(
+                    self.tr('Already annotating, finish annotation first.'))
         elif not hasProjectPath:
             self.setEnabled(False)
             self.setToolTip(
                 self.tr('Cannot annotate without project, save your project first.'))
-        elif hasLayers:
-            self.setEnabled(False)
-            self.setToolTip(
-                self.tr('Already annotating, finish annotation first.'))
         else:
             self.setEnabled(False)
             self.setToolTip(
                 self.tr('No layers available to annotate, add a layer first.'))
 
     def run(self):
-        self.setChecked(True)
-        self.main.annotationState.setAnnotating(True)
-
-        self.annotator.createAnnotation()
-
-        self.main.annotationState.setAnnotating(False)
-        self.setChecked(False)
+        if not self.main.annotationState.isAnnotating:
+            self.setChecked(True)
+            self.annotator.createAnnotation()
+        else:
+            self.setChecked(False)
+            self.annotator.saveAnnotations()
 
 
 class AnnotatePolygonButton(AbstractToolbarButton, Translatable):

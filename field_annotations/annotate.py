@@ -1,8 +1,17 @@
+from enum import Enum
+import time
 from qgis.PyQt import QtCore
 
 from qgis.core import QgsWkbTypes, QgsExpressionContextUtils
 
 from .translate import Translatable
+
+
+class AnnotationType(Enum):
+    Point = 1
+    Line = 2
+    Polygon = 3
+
 
 class AnnotationState(QtCore.QObject):
     stateChanged = QtCore.pyqtSignal()
@@ -11,11 +20,19 @@ class AnnotationState(QtCore.QObject):
         super().__init__()
         self.main = main
 
+        self.currentAnnotationType = None
         self.isAnnotating = False
 
-    def setAnnotating(self, state):
-        if state != self.isAnnotating:
-            self.isAnnotating = state
+    def setCurrentAnnotationType(self, annotationType):
+        if annotationType != self.currentAnnotationType:
+            self.currentAnnotationType = annotationType
+            self.isAnnotating = self.currentAnnotationType is not None
+            self.stateChanged.emit()
+
+    def clearCurrentAnnotationType(self):
+        if self.currentAnnotationType is not None:
+            self.currentAnnotationType = None
+            self.isAnnotating = False
             self.stateChanged.emit()
 
 
@@ -26,7 +43,7 @@ class AbstractAnnotator:
     def getLayer(self):
         layer = self.main.annotationDb.getLayer(
             self.getLayerName(), self.getHumanLayerName(), self.getGeometryType())
-        self.main.annotationView.addLayer(layer)
+        return self.main.annotationView.addLayer(layer)
 
     def getLayerName(self):
         raise NotImplementedError
@@ -34,11 +51,30 @@ class AbstractAnnotator:
     def getHumanLayerName(self):
         raise NotImplementedError
 
+    def getAnnotationType(self):
+        raise NotImplementedError
+
     def getGeometryType(self):
         raise NotImplementedError
 
     def createAnnotation(self):
-        raise NotImplementedError
+        layer = self.getLayer()
+        self.main.annotationState.setCurrentAnnotationType(
+            self.getAnnotationType())
+
+        if not layer.isEditable():
+            layer.startEditing()
+
+        self.main.iface.setActiveLayer(layer)
+        self.main.iface.actionAddFeature().trigger()
+
+    def saveAnnotations(self):
+        layer = self.getLayer()
+        if layer.isEditable():
+            layer.commitChanges()
+            layer.endEditCommand()
+
+        self.main.annotationState.clearCurrentAnnotationType()
 
 
 class PointAnnotator(AbstractAnnotator, Translatable):
@@ -54,10 +90,8 @@ class PointAnnotator(AbstractAnnotator, Translatable):
     def getGeometryType(self):
         return QgsWkbTypes.Point
 
-    def createAnnotation(self):
-        layer = self.getLayer()
-        print('creating point annotation')
-
+    def getAnnotationType(self):
+        return AnnotationType.Point
 
 class LineAnnotator(AbstractAnnotator, Translatable):
     def __init__(self, main):
@@ -72,9 +106,8 @@ class LineAnnotator(AbstractAnnotator, Translatable):
     def getGeometryType(self):
         return QgsWkbTypes.LineString
 
-    def createAnnotation(self):
-        layer = self.getLayer()
-        print('creating line annotation')
+    def getAnnotationType(self):
+        return AnnotationType.Line
 
 
 class PolygonAnnotator(AbstractAnnotator, Translatable):
@@ -90,7 +123,10 @@ class PolygonAnnotator(AbstractAnnotator, Translatable):
     def getGeometryType(self):
         return QgsWkbTypes.Polygon
 
-    def createAnnotation(self):
-        layer = self.getLayer()
-        # author = QgsExpressionContextUtils.globalScope().variable('user_full_name')
-        print(f'creating polygon annotation in layer {layer}')
+    def getAnnotationType(self):
+        return AnnotationType.Polygon
+
+    # def createAnnotation(self):
+    #     layer = self.getLayer()
+    #     # author = QgsExpressionContextUtils.globalScope().variable('user_full_name')
+    #     print(f'creating polygon annotation in layer {layer}')
