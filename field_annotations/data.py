@@ -35,7 +35,6 @@ class AnnotationDb:
             schema.append(QgsField('annotation', QtCore.QVariant.String))
             schema.append(QgsField('dateCreated', QtCore.QVariant.DateTime))
             schema.append(QgsField('author', QtCore.QVariant.String))
-            schema.append(QgsField('photoLocation', QtCore.QVariant.String))
 
             crs = QgsCoordinateReferenceSystem('epsg:4326')
             options = QgsVectorFileWriter.SaveVectorOptions()

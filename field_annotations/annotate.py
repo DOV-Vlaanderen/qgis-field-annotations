@@ -1,9 +1,7 @@
 from enum import Enum
-import time
 from qgis.PyQt import QtCore
 
-from qgis.core import QgsWkbTypes, QgsExpressionContextUtils, QgsEditFormConfig
-from qgis.gui import QgsMapToolDigitizeFeature
+from qgis.core import QgsWkbTypes, QgsEditFormConfig
 
 from .translate import Translatable
 from .dialog import NewAnnotationDialog
@@ -78,22 +76,15 @@ class AbstractAnnotator:
         self.main.iface.actionAddFeature().trigger()
 
     def featureAdded(self, id):
-        print('feature added', id)
         layer = self.getLayer()
 
-        print('added features:', layer.editBuffer().addedFeatures())
         feature = layer.editBuffer().addedFeatures().get(id)
-        if feature is None:
-            return
+        if feature is not None:
+            dlg = NewAnnotationDialog(self.main, layer, feature)
+            dlg.exec()
 
-        dlg = NewAnnotationDialog(self.main, feature)
-        result = dlg.exec()
-
-        if result == 1:
-            layer.editBuffer().changeAttributeValue(
-                feature.id(), layer.fields().indexOf('author'), 'Roel')
-        else:
-            layer.editBuffer().deleteFeature(feature.id())
+            if dlg.shouldStopAnnotating == True:
+                self.stopAnnotating()
 
     def stopAnnotating(self):
         layer = self.getLayer()
@@ -105,11 +96,17 @@ class AbstractAnnotator:
     def endAnnotate(self):
         layer = self.getLayer()
 
+        try:
+            layer.featureAdded.disconnect(self.featureAdded)
+        except TypeError:
+            pass
+
         layer.afterRollBack.disconnect(self.endAnnotate)
         layer.afterCommitChanges.disconnect(self.endAnnotate)
 
         if layer.isEditable():
             layer.endEditCommand()
+
         self.main.annotationState.clearCurrentAnnotationType()
 
 
@@ -161,8 +158,3 @@ class PolygonAnnotator(AbstractAnnotator, Translatable):
 
     def getAnnotationType(self):
         return AnnotationType.Polygon
-
-    # def createAnnotation(self):
-    #     layer = self.getLayer()
-    #     # author = QgsExpressionContextUtils.globalScope().variable('user_full_name')
-    #     print(f'creating polygon annotation in layer {layer}')
