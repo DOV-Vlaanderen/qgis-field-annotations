@@ -70,40 +70,43 @@ class AbstractAnnotator:
         if not layer.isEditable():
             layer.startEditing()
 
+        layer.featureAdded.connect(self.featureAdded)
         layer.afterRollBack.connect(self.endAnnotate)
         layer.afterCommitChanges.connect(self.endAnnotate)
 
         self.main.iface.setActiveLayer(layer)
         self.main.iface.actionAddFeature().trigger()
 
-        mapToolDigitize = self.main.iface.mapCanvas().mapTool()
-        mapToolDigitize.digitizingCompleted.connect(self.featureAdded)
-        self.main.iface.mapCanvas().setMapTool(mapToolDigitize)
-
-    def featureAdded(self, feature):
-        print('feature added', feature, feature.id())
+    def featureAdded(self, id):
+        print('feature added', id)
         layer = self.getLayer()
+
+        print('added features:', layer.editBuffer().addedFeatures())
+        feature = layer.editBuffer().addedFeatures().get(id)
+        if feature is None:
+            return
 
         dlg = NewAnnotationDialog(self.main, feature)
         result = dlg.exec()
 
         if result == 1:
-            feature.setAttribute(layer.fields().indexOf('author'), 'Roel')
-            layer.dataProvider().addFeatures([feature])
+            layer.editBuffer().changeAttributeValue(
+                feature.id(), layer.fields().indexOf('author'), 'Roel')
+        else:
+            layer.editBuffer().deleteFeature(feature.id())
 
     def stopAnnotating(self):
         layer = self.getLayer()
+        layer.featureAdded.disconnect(self.featureAdded)
+
         if layer.isEditable():
-            layer.rollBack()
+            layer.commitChanges()
 
     def endAnnotate(self):
         layer = self.getLayer()
 
         layer.afterRollBack.disconnect(self.endAnnotate)
         layer.afterCommitChanges.disconnect(self.endAnnotate)
-
-        mapToolDigitize = self.main.iface.mapCanvas().mapTool()
-        mapToolDigitize.digitizingCompleted.disconnect(self.featureAdded)
 
         if layer.isEditable():
             layer.endEditCommand()
