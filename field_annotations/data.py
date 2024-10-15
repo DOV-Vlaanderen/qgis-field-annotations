@@ -20,6 +20,7 @@ class AnnotationDb:
         self.dbPath = None
 
         self.connectPopulate()
+        self.populate()
 
     def connectPopulate(self):
         """Connect the populate method to the necessary signals."""
