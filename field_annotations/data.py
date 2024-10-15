@@ -75,7 +75,6 @@ class AnnotationDb:
             """
             schema = QgsFields()
 
-            schema.append(QgsField('layer', QtCore.QVariant.String))
             schema.append(QgsField('annotation', QtCore.QVariant.String))
             schema.append(QgsField('dateCreated', QtCore.QVariant.DateTime))
             schema.append(QgsField('author', QtCore.QVariant.String))

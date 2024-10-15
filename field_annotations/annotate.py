@@ -12,6 +12,12 @@ class AnnotationType(Enum):
     Polygon = 3
 
 
+class AnnotationErrorType(Enum):
+    AlreadyAnnotating = 1
+    NoProject = 2
+    NoLayers = 3
+
+
 class AnnotationState(QtCore.QObject):
     """Class to save annotation state."""
     stateChanged = QtCore.pyqtSignal()

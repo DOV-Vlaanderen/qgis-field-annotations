@@ -1,7 +1,7 @@
 from qgis.PyQt import QtWidgets, QtGui
 from qgis.core import QgsProject
 
-from .annotate import PolygonAnnotator, PointAnnotator, LineAnnotator
+from .annotate import PolygonAnnotator, PointAnnotator, LineAnnotator, AnnotationErrorType
 from .translate import Translatable
 
 
@@ -25,7 +25,7 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         self.annotator = annotator
 
         self.setIcon(QtGui.QIcon(self.getIconPath()))
-        self.setToolTip(self.getToolTipText())
+        self.setToolTip(self.getToolTipValidText(False))
         self.setCheckable(True)
 
         self.connectPopulate()
@@ -43,8 +43,28 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         """
         raise NotImplementedError
 
-    def getToolTipText(self):
-        """Get the text for the tooltip.
+    def getToolTipValidText(self, isAnnotating):
+        """Get the valid text for the tooltip.
+
+        Parameters
+        ----------
+        isAnnotating: bool
+            Whether we are currently already annotating.
+
+        Raises
+        ------
+        NotImplementedError
+            Implement this in a subclass.
+        """
+        raise NotImplementedError
+
+    def getToolTipErrorText(self, annotationErrorType):
+        """Get the error text for the tooltip.
+
+        Parameters
+        ----------
+        annotationErrorType: AnnotationErrorType
+            The type of annotation error.
 
         Raises
         ------
@@ -78,23 +98,23 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
 
         if hasLayers and hasProjectPath and not self.main.annotationState.isAnnotating:
             self.setEnabled(True)
-            self.setToolTip(self.getToolTipText())
+            self.setToolTip(self.getToolTipValidText(False))
         elif hasLayers and hasProjectPath and self.main.annotationState.isAnnotating:
             self.setEnabled(
                 self.main.annotationState.currentAnnotationType == self.annotator.getAnnotationType())
             if self.isEnabled():
-                self.setToolTip(self.getToolTipText())
+                self.setToolTip(self.getToolTipValidText(True))
             else:
-                self.setToolTip(
-                    self.tr('Already annotating, finish annotation first.'))
+                self.setToolTip(self.getToolTipErrorText(
+                    AnnotationErrorType.AlreadyAnnotating))
         elif not hasProjectPath:
             self.setEnabled(False)
-            self.setToolTip(
-                self.tr('Cannot annotate without project, save your project first.'))
+            self.setToolTip(self.getToolTipErrorText(
+                AnnotationErrorType.NoProject))
         else:
             self.setEnabled(False)
-            self.setToolTip(
-                self.tr('No layers available to annotate, add a layer first.'))
+            self.setToolTip(self.getToolTipErrorText(
+                AnnotationErrorType.NoLayers))
 
     def run(self):
         """Called when the button is clicked.
@@ -116,8 +136,19 @@ class AnnotatePolygonButton(AbstractToolbarButton, Translatable):
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_polygon.png'
 
-    def getToolTipText(self):
-        return self.tr('Add a polygon annotation')
+    def getToolTipValidText(self, isAnnotating):
+        if not isAnnotating:
+            return self.tr('Add a polygon annotation')
+        else:
+            return self.tr('Stop annotating and save pending annotations.')
+
+    def getToolTipErrorText(self, annotationErrorType):
+        if annotationErrorType == AnnotationErrorType.AlreadyAnnotating:
+            return self.tr('Already annotating, finish annotation first.')
+        elif annotationErrorType == AnnotationErrorType.NoProject:
+            return self.tr('Cannot annotate without project, save your project first.')
+        elif annotationErrorType == AnnotationErrorType.NoLayers:
+            return self.tr('No layers available to annotate, add a layer first.')
 
 
 class AnnotateLineButton(AbstractToolbarButton, Translatable):
@@ -129,8 +160,20 @@ class AnnotateLineButton(AbstractToolbarButton, Translatable):
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_line.png'
 
-    def getToolTipText(self):
-        return self.tr('Add a line annotation')
+    def getToolTipValidText(self, isAnnotating):
+        if not isAnnotating:
+            return self.tr('Add a line annotation')
+        else:
+            return self.tr('Stop annotating and save pending annotations.')
+
+    def getToolTipErrorText(self, annotationErrorType):
+        if annotationErrorType == AnnotationErrorType.AlreadyAnnotating:
+            return self.tr('Already annotating, finish annotation first.')
+        elif annotationErrorType == AnnotationErrorType.NoProject:
+            return self.tr('Cannot annotate without project, save your project first.')
+        elif annotationErrorType == AnnotationErrorType.NoLayers:
+            return self.tr('No layers available to annotate, add a layer first.')
+
 
 class AnnotatePointButton(AbstractToolbarButton, Translatable):
     """Button to create a point annotation."""
@@ -141,5 +184,16 @@ class AnnotatePointButton(AbstractToolbarButton, Translatable):
     def getIconPath(self):
         return ':/plugins/field_annotations/icons/draw_point.png'
 
-    def getToolTipText(self):
-        return self.tr('Add a point annotation')
+    def getToolTipValidText(self, isAnnotating):
+        if not isAnnotating:
+            return self.tr('Add a point annotation')
+        else:
+            return self.tr('Stop annotating and save pending annotations.')
+
+    def getToolTipErrorText(self, annotationErrorType):
+        if annotationErrorType == AnnotationErrorType.AlreadyAnnotating:
+            return self.tr('Already annotating, finish annotation first.')
+        elif annotationErrorType == AnnotationErrorType.NoProject:
+            return self.tr('Cannot annotate without project, save your project first.')
+        elif annotationErrorType == AnnotationErrorType.NoLayers:
+            return self.tr('No layers available to annotate, add a layer first.')
