@@ -191,18 +191,21 @@ class AnnotationView(Translatable):
         QgsVectorLayer
             Vector layer in the map view.
         """
+        layerTreeRoot = QgsProject.instance().layerTreeRoot()
+        annotationGroup = layerTreeRoot.findGroup(self.tr('Field annotations'))
+
+        if annotationGroup is None:
+            annotationGroup = layerTreeRoot.insertGroup(
+                0, self.tr('Field annotations'))
+        else:
+            annotationGroup.setItemVisibilityChecked(True)
+
         if not self.hasLayer(layer):
             QgsProject.instance().addMapLayer(layer, addToLegend=False)
-
-            root = QgsProject.instance().layerTreeRoot()
-            annotationGroup = root.findGroup(self.tr('Field annotations'))
-
-            if annotationGroup is None:
-                annotationGroup = root.insertGroup(
-                    0, self.tr('Field annotations'))
-
             AnnotationLayerStyler.styleLayer(layer)
             annotationGroup.addLayer(layer)
             return layer
         else:
-            return self.findLayer(layer)
+            lyr = self.findLayer(layer)
+            layerTreeRoot.findLayer(lyr).setItemVisibilityChecked(True)
+            return lyr
