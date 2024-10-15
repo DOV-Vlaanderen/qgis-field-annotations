@@ -27,13 +27,6 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         self.setWindowTitle(self.tr(u'New annotation'))
         self.setLayout(QtWidgets.QVBoxLayout())
 
-        # label = QtWidgets.QLabel(self.tr('Add annotation'))
-        # labelFont = label.font()
-        # labelFont.setBold(True)
-        # labelFont.setPointSize(12)
-        # label.setFont(labelFont)
-        # self.layout().addWidget(label)
-
         textEditLabel = QtWidgets.QLabel(self.tr('Annotation'))
         textEditLabelFont = textEditLabel.font()
         textEditLabelFont.setItalic(True)
@@ -44,17 +37,6 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         self.textEdit.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.layout().addWidget(self.textEdit)
-
-        # layerLabel = QtWidgets.QLabel(self.tr('For layer'))
-        # layerLabelFont = layerLabel.font()
-        # layerLabelFont.setItalic(True)
-        # layerLabel.setFont(layerLabelFont)
-        # self.layout().addWidget(layerLabel)
-
-        # layerPicker = QtWidgets.QComboBox(self)
-        # self.layout().addWidget(layerPicker)
-
-        # self.layout().addStretch()
 
         buttonBox = QtWidgets.QDialogButtonBox(self)
         buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
@@ -75,7 +57,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         okButton.setIconSize(QtCore.QSize(32, 32))
         okButton.setToolButtonStyle(
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        okButton.clicked.connect(self.accept)
+        okButton.clicked.connect(lambda: self.accept(True))
 
         buttonBox.addButton(
             cancelButton, QtWidgets.QDialogButtonBox.ButtonRole.RejectRole)
@@ -85,11 +67,11 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
         okShortcut = QtGui.QShortcut(self)
         okShortcut.setKey(QtGui.QKeySequence('Ctrl+Return'))
-        okShortcut.activated.connect(self.accept)
+        okShortcut.activated.connect(lambda: self.accept(True))
 
         okShortcut = QtGui.QShortcut(self)
         okShortcut.setKey(QtGui.QKeySequence('Ctrl+S'))
-        okShortcut.activated.connect(self.accept)
+        okShortcut.activated.connect(lambda: self.accept(True))
 
         okFinishShortcut = QtGui.QShortcut(self)
         okFinishShortcut.setKey(QtGui.QKeySequence('Ctrl+Shift+Return'))

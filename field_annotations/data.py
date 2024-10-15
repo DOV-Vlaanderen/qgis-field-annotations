@@ -16,6 +16,7 @@ class AnnotationDb:
     def connectPopulate(self):
         QgsProject.instance().cleared.connect(self.populate)
         QgsProject.instance().readProject.connect(self.populate)
+        QgsProject.instance().projectSaved.connect(self.populate)
 
     def populate(self):
         basePath = QgsProject.instance().absolutePath()

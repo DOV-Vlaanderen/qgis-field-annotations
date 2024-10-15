@@ -35,7 +35,7 @@ class AnnotationLayerStyler:
         lineSymbol = QgsLineSymbol.createSimple(props)
 
         arrow = QgsArrowSymbolLayer.create(
-            {'is_curved': '1', 'is_repeated': '1'})
+            {'is_curved': '0', 'is_repeated': '1'})
         lineSymbol.changeSymbolLayer(0, arrow)
 
         props = arrow.subSymbol().symbolLayer(0).properties()
