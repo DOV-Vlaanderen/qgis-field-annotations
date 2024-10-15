@@ -6,7 +6,19 @@ from .translate import Translatable
 
 
 class AbstractToolbarButton(QtWidgets.QToolButton):
+    """Abstract base class for the toolbar buttons."""
     def __init__(self, main, annotator, parent=None):
+        """Initialisation.
+
+        Parameters
+        ----------
+        main : FieldAnnotations
+            Reference to main plugin instance.
+        annotator : AbstractAnnotator
+            Reference to associated Annotator instance.
+        parent : QToolBar, optional
+            Parent toolbar, by default None
+        """
         QtWidgets.QToolButton.__init__(self, parent)
 
         self.main = main
@@ -22,12 +34,27 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         self.populate()
 
     def getIconPath(self):
+        """Get the resource path to the icon.
+
+        Raises
+        ------
+        NotImplementedError
+            Implement this in a subclass.
+        """
         raise NotImplementedError
 
     def getToolTipText(self):
+        """Get the text for the tooltip.
+
+        Raises
+        ------
+        NotImplementedError
+            Implement this in a subclass.
+        """
         raise NotImplementedError
 
     def connectPopulate(self):
+        """Connect the populate method to the necessary signals."""
         projectInstance = QgsProject.instance()
 
         projectInstance.cleared.connect(self.populate)
@@ -38,6 +65,11 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         self.main.annotationState.stateChanged.connect(self.populate)
 
     def populate(self):
+        """Populate the button state.
+
+        Sets the button state (enabled/disabled and checked/unchecked) and the button tooltip
+        depending on the application state.
+        """
         hasLayers = len(QgsProject.instance().mapLayers()) > 0
         hasProjectPath = len(QgsProject.instance().absolutePath()) > 0
 
@@ -65,6 +97,10 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
                 self.tr('No layers available to annotate, add a layer first.'))
 
     def run(self):
+        """Called when the button is clicked.
+
+        Starts or stops the annotator depending on annotation state.
+        """
         if not self.main.annotationState.isAnnotating:
             self.annotator.createAnnotation()
         else:
@@ -72,6 +108,7 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
 
 
 class AnnotatePolygonButton(AbstractToolbarButton, Translatable):
+    """Button to create a polygon annotation."""
     def __init__(self, main, parent=None):
         annotator = PolygonAnnotator(main)
         super().__init__(main, annotator, parent)
@@ -84,6 +121,7 @@ class AnnotatePolygonButton(AbstractToolbarButton, Translatable):
 
 
 class AnnotateLineButton(AbstractToolbarButton, Translatable):
+    """Button to create a line annotation."""
     def __init__(self, main, parent=None):
         annotator = LineAnnotator(main)
         super().__init__(main, annotator, parent)
@@ -95,6 +133,7 @@ class AnnotateLineButton(AbstractToolbarButton, Translatable):
         return self.tr('Add a line annotation')
 
 class AnnotatePointButton(AbstractToolbarButton, Translatable):
+    """Button to create a point annotation."""
     def __init__(self, main, parent=None):
         annotator = PointAnnotator(main)
         super().__init__(main, annotator, parent)

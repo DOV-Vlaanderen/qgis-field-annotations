@@ -4,7 +4,7 @@ from .translate import Translatable
 
 
 class Config(QtCore.QObject, Translatable):
-    """Class to centralise all information regarding themes."""
+    """Class to centralise all common configuration."""
     configChanged = QtCore.pyqtSignal()
 
     def __init__(self, main):

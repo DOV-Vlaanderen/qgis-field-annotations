@@ -74,7 +74,7 @@ class FieldAnnotations(Translatable):
         self.annotationView = AnnotationView(self)
 
     def initGui(self):
-        """Create the dialog and the toolbar."""
+        """Create the toolbar."""
         self.toolbar = self.iface.addToolBar(self.tr('Field annotations'))
         FieldAnnotationsToolbar(self.toolbar, self)
 

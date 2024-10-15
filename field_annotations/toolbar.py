@@ -5,14 +5,14 @@ class FieldAnnotationsToolbar:
     def __init__(self, toolbar, main):
         """Initialise the toolbar.
 
-        Add the ToolbarButton to the toolbar.
+        Add the AnnotateButtons to the toolbar.
 
         Parameters
         ----------
         toolbar : QToolBar
             Reference to toolbar.
-        main : ThemeSwitcher
-            Reference to main ThemeSwitcher instance.
+        main : FieldAnnotations
+            Reference to main plugin instance.
         """
         self.toolbar = toolbar
         self.main = main

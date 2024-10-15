@@ -6,13 +6,18 @@ from .translate import Translatable
 
 
 class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
+    """Dialog to enter details of a new annotation."""
     def __init__(self, main, layer, feature):
-        """Initialise the dialog.
+        """Initialisation.
 
         Parameters
         ----------
-        main : ThemeSwitcher
-            Reference to main ThemeSwitcher instance
+        main : FieldAnnotations
+            Reference to main plugin instance.
+        layer : QgsVectorLayer
+            Vector layer where the annotation will be added.
+        feature : QgsFeature
+            Annotation feature that was drawn and will be added on accepting the dialog.
         """
         QtWidgets.QDialog.__init__(self)
         self.main = main
@@ -84,6 +89,15 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         self.adjustSize()
 
     def accept(self, superAccept=True):
+        """Update the feature with the annotation text and other data values.
+
+        When superAccept is True, accept the dialog too and close it.
+
+        Parameters
+        ----------
+        superAccept : bool, optional
+            When True, the dialog itself will be accepted and closed.
+        """
         annotation = self.textEdit.toPlainText()
         author = QgsExpressionContextUtils.globalScope().variable('user_full_name')
 
@@ -98,10 +112,15 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
             super().accept()
 
     def acceptFinish(self):
+        """Update the feature and initiate stop annotating."""
         self.accept(superAccept=False)
         self.shouldStopAnnotating = True
         super().accept()
 
     def reject(self):
+        """Reject the changes and close the dialog.
+
+        Removes the feature from the edit buffer.
+        """
         self.layer.editBuffer().deleteFeature(self.feature.id())
         super().reject()

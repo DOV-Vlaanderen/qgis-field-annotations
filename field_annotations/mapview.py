@@ -7,8 +7,18 @@ from .translate import Translatable
 
 
 class AnnotationLayerStyler:
+    """Class with helper methods to style new annotation layers."""
     @staticmethod
     def styleLayer(layer):
+        """Entry method to style a layer.
+
+        Will call the relevant method depending on the layers geometry type.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer to style.
+        """
         geometryType = layer.geometryType()
 
         if geometryType == Qgis.GeometryType.Polygon:
@@ -22,6 +32,13 @@ class AnnotationLayerStyler:
 
     @staticmethod
     def stylePolygonLayer(layer):
+        """Style a polygon layer.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer to style.
+        """
         props = layer.renderer().symbol().symbolLayer(0).properties()
         props['color'] = '112,68,134,64'
         props['outline_color'] = '112,68,134,255'
@@ -31,6 +48,13 @@ class AnnotationLayerStyler:
 
     @staticmethod
     def styleLineLayer(layer):
+        """Style a line layer.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer to style.
+        """
         props = layer.renderer().symbol().symbolLayer(0).properties()
         lineSymbol = QgsLineSymbol.createSimple(props)
 
@@ -49,6 +73,13 @@ class AnnotationLayerStyler:
 
     @staticmethod
     def stylePointLayer(layer):
+        """Style a point layer.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Point layer to style.
+        """
         props = layer.renderer().symbol().symbolLayer(0).properties()
         props['color'] = '112,68,134,64'
         props['outline_color'] = '112,68,134,255'
@@ -59,6 +90,15 @@ class AnnotationLayerStyler:
 
     @staticmethod
     def styleLabels(layer, field='annotation'):
+        """Style labels for the layer.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer to style.
+        field : str, optional
+            Field to use for the labels, by default 'annotation'
+        """
         label_settings = QgsPalLayerSettings()
         label_settings.enabled = True
         label_settings.fieldName = field
@@ -89,10 +129,32 @@ class AnnotationLayerStyler:
 
 
 class AnnotationView(Translatable):
+    """Helper class to show annotation layers on the map."""
     def __init__(self, main):
+        """Initialisation.
+
+        Parameters
+        ----------
+        main : FieldAnnotations
+            Reference to main plugin instance.
+        """
         self.main = main
 
     def findLayer(self, layer):
+        """Find the given layer in the current map view and return it.
+
+        Will return an existing map layer that matches the source data provider URI of the given layer.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer to find.
+
+        Returns
+        -------
+        QgsVectorLayer or None
+            Existing vector layer matching the given layer, or None if none could be found.
+        """
         projectLayers = QgsProject.instance().mapLayers().values()
 
         for projectLayer in projectLayers:
@@ -100,9 +162,35 @@ class AnnotationView(Translatable):
                 return projectLayer
 
     def hasLayer(self, layer):
+        """Check if the current map view already has the given layer.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer to find.
+
+        Returns
+        -------
+        bool
+            True if the layer already exists, False otherwise.
+        """
         return self.findLayer(layer) is not None
 
     def addLayer(self, layer):
+        """Add the given vector layer to the map.
+
+        Will return an existing layer if it was already added to the map.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer to add.
+
+        Returns
+        -------
+        QgsVectorLayer
+            Vector layer in the map view.
+        """
         if not self.hasLayer(layer):
             QgsProject.instance().addMapLayer(layer, addToLegend=False)
 

@@ -7,18 +7,28 @@ from qgis.core import QgsProject
 
 
 class AnnotationDb:
+    """Class managing the annotation database and layers."""
     def __init__(self, main):
+        """Initialisation.
+
+        Parameters
+        ----------
+        main : FieldAnnotations
+            Reference to main plugin instance.
+        """
         self.main = main
         self.dbPath = None
 
         self.connectPopulate()
 
     def connectPopulate(self):
+        """Connect the populate method to the necessary signals."""
         QgsProject.instance().cleared.connect(self.populate)
         QgsProject.instance().readProject.connect(self.populate)
         QgsProject.instance().projectSaved.connect(self.populate)
 
     def populate(self):
+        """Set the database path according to project state."""
         basePath = QgsProject.instance().absolutePath()
         projectName = QgsProject.instance().baseName()
 
@@ -29,7 +39,40 @@ class AnnotationDb:
             self.dbPath = None
 
     def getLayer(self, layerName, humanLayerName, geometryType):
+        """Get required data layer based on the parameters.
+
+        Will create the database and the layer if it does not already exist.
+
+        Parameters
+        ----------
+        layerName : str
+            Technical name of the layer.
+        humanLayerName : str
+            Human readable name of the layer.
+        geometryType : QgsWkbTypes
+            Geometry type of the layer.
+        """
         def createNewGpkgLayer(layerName, geometryType, fileExists):
+            """Create a new geopackage layer.
+
+            If the database does not exist already, it will create the database and the layer.
+            If the database already exists, it will add the layer to it.
+            It the database and layer already exists, it will overwrite the layer.
+
+            Parameters
+            ----------
+            layerName : str
+                Technical name of the layer.
+            geometryType : QgsWkbTypes
+                Geometry type of the layer.
+            fileExists : bool
+                True if the database already exists, False otherwise.
+
+            Returns
+            -------
+            QgsVectorLayer
+                Vector layer instance with the required setup.
+            """
             schema = QgsFields()
 
             schema.append(QgsField('layer', QtCore.QVariant.String))
