@@ -169,11 +169,11 @@ class AnnotationView(Translatable):
         if currentMode == AnnotationViewMode.AllAnnotations:
             subsetString = None
         elif currentMode == AnnotationViewMode.VisibleLayers:
-            subsetString = 'layerUri is null'
+            subsetString = '"layerUri" is null'
             projectLayers = QgsProject.instance().mapLayers().values()
             for projectLayer in projectLayers:
                 if self.isAnnotatableLayer(projectLayer):
-                    subsetString += f" or layerUri='{self.getLayerUri(projectLayer)}'"
+                    subsetString += f" or \"layerUri\"='{self.getLayerUri(projectLayer, escape=True)}'"
 
         for annotationLayer in self.main.annotationDb.listAnnotationLayers():
             annotationLayer.setSubsetString(subsetString)
@@ -295,8 +295,10 @@ class AnnotationView(Translatable):
         layerTreeRoot = QgsProject.instance().layerTreeRoot()
         return [l for l in layerTreeRoot.layerOrder() if self.isAnnotatableLayer(l)]
 
-    def getLayerUri(self, layer):
+    def getLayerUri(self, layer, escape=False):
         dataProvider = layer.dataProvider()
         layerDataSourceUri = self.stripSubsetString(
             dataProvider.dataSourceUri())
+        if escape:
+            layerDataSourceUri = layerDataSourceUri.replace('\'', '\'\'')
         return f'{dataProvider.name()}://{layerDataSourceUri}'
