@@ -1,8 +1,11 @@
+import re
+
 from qgis.core import (
     QgsProject, QgsFillSymbol, QgsLineSymbol, QgsArrowSymbolLayer, QgsMarkerSymbol, Qgis, QgsPalLayerSettings,
     QgsTextFormat, QgsTextBufferSettings, QgsVectorLayerSimpleLabeling)
 from qgis.PyQt import QtGui
 
+from .annotate import AnnotationViewMode
 from .translate import Translatable
 
 
@@ -140,6 +143,49 @@ class AnnotationView(Translatable):
         """
         self.main = main
 
+        self.re_subsetString = re.compile(r'\|subset=[^|]*')
+
+        self.connectPopulate()
+        self.populate()
+
+    def connectPopulate(self):
+        projectInstance = QgsProject.instance()
+
+        projectInstance.cleared.connect(self.populate)
+        projectInstance.readProject.connect(self.populate)
+        projectInstance.projectSaved.connect(self.populate)
+        projectInstance.layersAdded.connect(self.populate)
+        projectInstance.layersRemoved.connect(self.populate)
+
+        layerTreeRoot = projectInstance.layerTreeRoot()
+        layerTreeRoot.visibilityChanged.connect(self.populate)
+
+        self.main.iface.mapCanvas().scaleChanged.connect(self.populate)
+        self.main.annotationState.stateChanged.connect(self.populate)
+
+    def populate(self):
+        currentMode = self.main.annotationState.currentAnnotationViewMode
+
+        if currentMode == AnnotationViewMode.AllAnnotations:
+            subsetString = None
+        elif currentMode == AnnotationViewMode.VisibleLayers:
+            subsetString = 'layerUri is null'
+            projectLayers = QgsProject.instance().mapLayers().values()
+            for projectLayer in projectLayers:
+                if self.isAnnotatableLayer(projectLayer):
+                    subsetString += f" or layerUri='{self.getLayerUri(projectLayer)}'"
+
+        for annotationLayer in self.main.annotationDb.listAnnotationLayers():
+            annotationLayer.setSubsetString(subsetString)
+
+    def stripSubsetString(self, dataSourceUri):
+        return self.re_subsetString.sub('', dataSourceUri)
+
+    # def isDataSourceUriEqual(self, ds1, ds2):
+    #     url1 = urlparse(self.stripSubsetString(ds1))
+    #     url2 = urlparse(self.stripSubsetString(ds2))
+    #     return url1 == url2
+
     def findLayer(self, layer):
         """Find the given layer in the current map view and return it.
 
@@ -158,7 +204,8 @@ class AnnotationView(Translatable):
         projectLayers = QgsProject.instance().mapLayers().values()
 
         for projectLayer in projectLayers:
-            if projectLayer.dataProvider().dataSourceUri() == layer.dataProvider().dataSourceUri():
+            if self.stripSubsetString(projectLayer.dataProvider().dataSourceUri()) == \
+                    self.stripSubsetString(layer.dataProvider().dataSourceUri()):
                 return projectLayer
 
     def hasLayer(self, layer):
@@ -209,3 +256,47 @@ class AnnotationView(Translatable):
             lyr = self.findLayer(layer)
             layerTreeRoot.findLayer(lyr).setItemVisibilityChecked(True)
             return lyr
+
+    def isAnnotatableLayer(self, layer):
+        """Checks whether the layer is an annotatable layer.
+
+        Parameters
+        ----------
+        layer : QgsMapLayer
+            The layer to evaluate.
+
+        Returns
+        -------
+        bool
+            True if the layer is annotable, False otherwise.
+        """
+        if layer.dataProvider().name() == 'memory':
+            return False
+
+        if self.main.annotationDb.isAnnotationLayer(layer):
+            return False
+
+        layerTreeRoot = QgsProject.instance().layerTreeRoot()
+        layerTreeLayer = layerTreeRoot.findLayer(layer)
+        if layerTreeLayer is None or not layerTreeLayer.isVisible():
+            return False
+
+        mapCanvas = self.main.iface.mapCanvas()
+        return layer.isInScaleRange(mapCanvas.scale())
+
+    def listAnnotatableLayers(self):
+        """List all the annotatable layers in the current project.
+
+        Returns
+        -------
+        list of QgsMapLayer
+            List of all layers in the current project that can be annotated.
+        """
+        layerTreeRoot = QgsProject.instance().layerTreeRoot()
+        return [l for l in layerTreeRoot.layerOrder() if self.isAnnotatableLayer(l)]
+
+    def getLayerUri(self, layer):
+        dataProvider = layer.dataProvider()
+        layerDataSourceUri = self.stripSubsetString(
+            dataProvider.dataSourceUri())
+        return f'{dataProvider.name()}://{layerDataSourceUri}'

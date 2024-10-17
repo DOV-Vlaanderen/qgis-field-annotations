@@ -79,6 +79,8 @@ class AnnotationDb:
             schema.append(QgsField('annotation', QtCore.QVariant.String))
             schema.append(QgsField('dateCreated', QtCore.QVariant.DateTime))
             schema.append(QgsField('author', QtCore.QVariant.String))
+            schema.append(QgsField('layerUri', QtCore.QVariant.String))
+            schema.append(QgsField('layerName', QtCore.QVariant.String))
 
             crs = QgsCoordinateReferenceSystem('epsg:4326')
             options = QgsVectorFileWriter.SaveVectorOptions()
@@ -112,3 +114,27 @@ class AnnotationDb:
                 createNewGpkgLayer(layerName, geometryType, fileExists=True)
 
         return QgsVectorLayer(f'{self.dbPath}|layername={layerName}', humanLayerName, "ogr")
+
+    def isAnnotationLayer(self, layer):
+        """Checks whether the given layer is an annotation layer.
+
+        Parameters
+        ----------
+        layer : QgsMapLayer
+            Layer to check
+
+        Returns
+        -------
+        bool
+            True if the layer is used to store annotations, False otherwise.
+        """
+        if layer.dataProvider().name() != 'ogr':
+            return False
+
+        if self.dbPath is None:
+            return False
+
+        return layer.dataProvider().dataSourceUri().startswith(self.dbPath)
+
+    def listAnnotationLayers(self):
+        return [l for l in QgsProject.instance().mapLayers().values() if self.isAnnotationLayer(l)]
