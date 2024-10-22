@@ -199,11 +199,6 @@ class AnnotationView(Translatable):
         """
         return self.re_subsetString.sub('', dataSourceUri)
 
-    # def isDataSourceUriEqual(self, ds1, ds2):
-    #     url1 = urlparse(self.stripSubsetString(ds1))
-    #     url2 = urlparse(self.stripSubsetString(ds2))
-    #     return url1 == url2
-
     def findLayer(self, layer):
         """Find the given layer in the current map view and return it.
 
