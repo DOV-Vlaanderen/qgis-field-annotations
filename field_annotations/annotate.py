@@ -64,6 +64,13 @@ class AnnotationState(QtCore.QObject):
             self.stateChanged.emit()
 
     def setCurrentAnnotationViewMode(self, annotationViewMode):
+        """Set the current annotation view mode.
+
+        Parameters
+        ----------
+        annotationViewMode : AnnotationViewMode
+            Currently active annotation view mode.
+        """
         if not isinstance(annotationViewMode, AnnotationViewMode):
             raise TypeError('Wrong annotationViewMode provided.')
 
@@ -72,6 +79,7 @@ class AnnotationState(QtCore.QObject):
             self.stateChanged.emit()
 
     def toggleAnnotationViewMode(self):
+        """Toggle the current annotation view mode, switch between all annotations and visible layers."""
         newModeMap = {
             AnnotationViewMode.VisibleLayers: AnnotationViewMode.AllAnnotations,
             AnnotationViewMode.AllAnnotations: AnnotationViewMode.VisibleLayers
@@ -166,6 +174,7 @@ class AbstractAnnotator:
         self.main.iface.actionAddFeature().trigger()
 
     def disconnectFeatureAdded(self):
+        """Disconnect the featureAdded signal."""
         layer = self.getLayer()
         try:
             layer.featureAdded.disconnect(self.featureAdded)

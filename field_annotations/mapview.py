@@ -149,6 +149,7 @@ class AnnotationView(Translatable):
         self.populate()
 
     def connectPopulate(self):
+        """Connect the populate method to the necessary signals."""
         projectInstance = QgsProject.instance()
 
         projectInstance.cleared.connect(self.populate)
@@ -164,6 +165,11 @@ class AnnotationView(Translatable):
         self.main.annotationState.stateChanged.connect(self.populate)
 
     def populate(self):
+        """Populate the map view.
+
+        Depending on the current annotation view mode, set the annotation layer filters
+        accordingly.
+        """
         currentMode = self.main.annotationState.currentAnnotationViewMode
 
         if currentMode == AnnotationViewMode.AllAnnotations:
@@ -179,6 +185,18 @@ class AnnotationView(Translatable):
             annotationLayer.setSubsetString(subsetString)
 
     def stripSubsetString(self, dataSourceUri):
+        """Strip the subset string from the given dataSourceUri.
+
+        Parameters
+        ----------
+        dataSourceUri : str
+            Data source uri of a map layer.
+
+        Returns
+        -------
+        str
+            dataSourceUri without the subsetstring component
+        """
         return self.re_subsetString.sub('', dataSourceUri)
 
     # def isDataSourceUriEqual(self, ds1, ds2):
@@ -296,6 +314,20 @@ class AnnotationView(Translatable):
         return [l for l in layerTreeRoot.layerOrder() if self.isAnnotatableLayer(l)]
 
     def getLayerUri(self, layer, escape=False):
+        """Get the layer URI of the given layer.
+
+        Parameters
+        ----------
+        layer : QgsMapLayer
+            Layer for which to get the layer URI.
+        escape : bool, optional
+            Escape the single quotes in the layer uri, by default False
+
+        Returns
+        -------
+        str
+            The layer URI of the given map layer.
+        """
         dataProvider = layer.dataProvider()
         layerDataSourceUri = self.stripSubsetString(
             dataProvider.dataSourceUri())

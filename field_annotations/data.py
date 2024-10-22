@@ -137,4 +137,11 @@ class AnnotationDb:
         return layer.dataProvider().dataSourceUri().startswith(self.dbPath)
 
     def listAnnotationLayers(self):
+        """Return a list of all annotation layers in the current project.
+
+        Returns
+        -------
+        list of QgsVectorLayer
+            List of layers used to store annotations.
+        """
         return [l for l in QgsProject.instance().mapLayers().values() if self.isAnnotationLayer(l)]

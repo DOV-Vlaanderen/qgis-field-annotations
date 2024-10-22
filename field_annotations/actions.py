@@ -210,6 +210,15 @@ class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
     """Button to toggle between all notes and visible layer notes."""
 
     def __init__(self, main, parent=None):
+        """Initialisation.
+
+        Parameters
+        ----------
+        main : FieldAnnotations
+            Reference to main plugin instance.
+        parent : QToolBar, optional
+            Parent toolbar, by default None
+        """
         super().__init__(parent)
 
         self.main = main
@@ -223,6 +232,7 @@ class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
         self.populate()
 
     def connectPopulate(self):
+        """Connect the populate method to the necessary signals."""
         projectInstance = QgsProject.instance()
 
         projectInstance.cleared.connect(self.populate)
@@ -238,6 +248,11 @@ class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
         self.main.annotationState.stateChanged.connect(self.populate)
 
     def populate(self):
+        """Populate the button state.
+
+        Sets the button state (enabled/disabled and checked/unchecked) and the button tooltip
+        depending on the application state.
+        """
         hasLayers = len(self.main.annotationView.listAnnotatableLayers()) > 0
         hasProjectPath = len(QgsProject.instance().absolutePath()) > 0
 
@@ -254,4 +269,9 @@ class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
                 self.tr('Show annotations for visible layers only.'))
 
     def run(self):
+        """Called when the button is clicked.
+
+        Toggles the annotation view mode between all annotations and annotations
+        of visible layers only.
+        """
         self.main.annotationState.toggleAnnotationViewMode()

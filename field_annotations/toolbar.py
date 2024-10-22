@@ -5,7 +5,7 @@ class FieldAnnotationsToolbar:
     def __init__(self, toolbar, main):
         """Initialise the toolbar.
 
-        Add the AnnotateButtons to the toolbar.
+        Add the AnnotateButtons and ToggleAnnotationViewButton to the toolbar.
 
         Parameters
         ----------
