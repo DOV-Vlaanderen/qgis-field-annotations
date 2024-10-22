@@ -1,6 +1,7 @@
 import datetime
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
+from qgis.gui import QgsMapLayerComboBox
 
 from .translate import Translatable
 
@@ -39,9 +40,25 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         self.layout().addWidget(textEditLabel)
 
         self.textEdit = QtWidgets.QTextEdit(self)
+        self.textEdit.setTabChangesFocus(True)
         self.textEdit.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.layout().addWidget(self.textEdit)
+
+        layerSelectorLabel = QtWidgets.QLabel(self.tr('For layer'))
+        layerSelectorLabelFont = layerSelectorLabel.font()
+        layerSelectorLabelFont.setItalic(True)
+        layerSelectorLabel.setFont(layerSelectorLabelFont)
+        self.layout().addWidget(layerSelectorLabel)
+
+        self.layerSelector = QtWidgets.QComboBox(self)
+        self.layerSelector.addItem(QtGui.QIcon(
+            ':/plugins/field_annotations/icons/no_map.png'), self.tr('No layer'), None)
+
+        for l in self.main.annotationView.listAnnotatableLayers():
+            self.layerSelector.addItem(QtGui.QIcon(
+                ':/plugins/field_annotations/icons/map.png'), l.name(), l)
+            self.layout().addWidget(self.layerSelector)
 
         buttonBox = QtWidgets.QDialogButtonBox(self)
         buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
@@ -101,11 +118,20 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         annotation = self.textEdit.toPlainText()
         author = QgsExpressionContextUtils.globalScope().variable('user_full_name')
 
+        layer = self.layerSelector.currentData()
+        if layer is not None:
+            layerUri = self.main.annotationView.getLayerUri(layer)
+            layerName = layer.name()
+        else:
+            layerUri = layerName = None
+
         self.layer.editBuffer().changeAttributeValues(
             self.feature.id(), {
                 self.layer.fields().indexOf('annotation'): annotation,
                 self.layer.fields().indexOf('author'): author,
-                self.layer.fields().indexOf('dateCreated'): datetime.datetime.now().isoformat()
+                self.layer.fields().indexOf('dateCreated'): datetime.datetime.now().isoformat(),
+                self.layer.fields().indexOf('layerUri'): layerUri,
+                self.layer.fields().indexOf('layerName'): layerName,
             }, {})
 
         if superAccept:

@@ -1,7 +1,7 @@
 from qgis.PyQt import QtWidgets, QtGui
 from qgis.core import QgsProject
 
-from .annotate import PolygonAnnotator, PointAnnotator, LineAnnotator, AnnotationErrorType
+from .annotate import AnnotationViewMode, PolygonAnnotator, PointAnnotator, LineAnnotator, AnnotationErrorType
 from .translate import Translatable
 
 
@@ -84,13 +84,18 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
         projectInstance.layersRemoved.connect(self.populate)
         self.main.annotationState.stateChanged.connect(self.populate)
 
+        layerTreeRoot = projectInstance.layerTreeRoot()
+        layerTreeRoot.visibilityChanged.connect(self.populate)
+
+        self.main.iface.mapCanvas().scaleChanged.connect(self.populate)
+
     def populate(self):
         """Populate the button state.
 
         Sets the button state (enabled/disabled and checked/unchecked) and the button tooltip
         depending on the application state.
         """
-        hasLayers = len(QgsProject.instance().mapLayers()) > 0
+        hasLayers = len(self.main.annotationView.listAnnotatableLayers()) > 0
         hasProjectPath = len(QgsProject.instance().absolutePath()) > 0
 
         self.setChecked(self.main.annotationState.currentAnnotationType ==
@@ -115,6 +120,8 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
             self.setEnabled(False)
             self.setToolTip(self.getToolTipErrorText(
                 AnnotationErrorType.NoLayers))
+            if self.main.annotationState.isAnnotating:
+                self.annotator.stopAnnotating()
 
     def run(self):
         """Called when the button is clicked.
@@ -197,3 +204,74 @@ class AnnotatePointButton(AbstractToolbarButton, Translatable):
             return self.tr('Cannot annotate without project, save your project first.')
         elif annotationErrorType == AnnotationErrorType.NoLayers:
             return self.tr('No layers available to annotate, add a layer first.')
+
+
+class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
+    """Button to toggle between all notes and visible layer notes."""
+
+    def __init__(self, main, parent=None):
+        """Initialisation.
+
+        Parameters
+        ----------
+        main : FieldAnnotations
+            Reference to main plugin instance.
+        parent : QToolBar, optional
+            Parent toolbar, by default None
+        """
+        super().__init__(parent)
+
+        self.main = main
+        self.setIcon(QtGui.QIcon(
+            ':/plugins/field_annotations/icons/map_notes.png'))
+        self.setCheckable(True)
+
+        self.connectPopulate()
+
+        self.clicked.connect(self.run)
+        self.populate()
+
+    def connectPopulate(self):
+        """Connect the populate method to the necessary signals."""
+        projectInstance = QgsProject.instance()
+
+        projectInstance.cleared.connect(self.populate)
+        projectInstance.readProject.connect(self.populate)
+        projectInstance.projectSaved.connect(self.populate)
+        projectInstance.layersAdded.connect(self.populate)
+        projectInstance.layersRemoved.connect(self.populate)
+        self.main.annotationState.stateChanged.connect(self.populate)
+
+        layerTreeRoot = projectInstance.layerTreeRoot()
+        layerTreeRoot.visibilityChanged.connect(self.populate)
+
+        self.main.annotationState.stateChanged.connect(self.populate)
+
+    def populate(self):
+        """Populate the button state.
+
+        Sets the button state (enabled/disabled and checked/unchecked) and the button tooltip
+        depending on the application state.
+        """
+        hasLayers = len(self.main.annotationView.listAnnotatableLayers()) > 0
+        hasProjectPath = len(QgsProject.instance().absolutePath()) > 0
+
+        self.setEnabled(hasLayers and hasProjectPath)
+
+        currentMode = self.main.annotationState.currentAnnotationViewMode
+
+        if currentMode == AnnotationViewMode.VisibleLayers:
+            self.setChecked(True)
+            self.setToolTip(self.tr('Show all annotations.'))
+        elif currentMode == AnnotationViewMode.AllAnnotations:
+            self.setChecked(False)
+            self.setToolTip(
+                self.tr('Show annotations for visible layers only.'))
+
+    def run(self):
+        """Called when the button is clicked.
+
+        Toggles the annotation view mode between all annotations and annotations
+        of visible layers only.
+        """
+        self.main.annotationState.toggleAnnotationViewMode()

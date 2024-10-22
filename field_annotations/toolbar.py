@@ -1,11 +1,11 @@
-from .actions import AnnotatePolygonButton, AnnotateLineButton, AnnotatePointButton
+from .actions import AnnotatePolygonButton, AnnotateLineButton, AnnotatePointButton, ToggleAnnotationViewButton
 
 
 class FieldAnnotationsToolbar:
     def __init__(self, toolbar, main):
         """Initialise the toolbar.
 
-        Add the AnnotateButtons to the toolbar.
+        Add the AnnotateButtons and ToggleAnnotationViewButton to the toolbar.
 
         Parameters
         ----------
@@ -20,3 +20,6 @@ class FieldAnnotationsToolbar:
         self.toolbar.addWidget(AnnotatePolygonButton(self.main, self.toolbar))
         self.toolbar.addWidget(AnnotateLineButton(self.main, self.toolbar))
         self.toolbar.addWidget(AnnotatePointButton(self.main, self.toolbar))
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(
+            ToggleAnnotationViewButton(self.main, self.toolbar))

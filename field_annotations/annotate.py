@@ -12,6 +12,11 @@ class AnnotationType(Enum):
     Polygon = 3
 
 
+class AnnotationViewMode(Enum):
+    AllAnnotations = 1
+    VisibleLayers = 2
+
+
 class AnnotationErrorType(Enum):
     AlreadyAnnotating = 1
     NoProject = 2
@@ -36,6 +41,8 @@ class AnnotationState(QtCore.QObject):
         self.currentAnnotationType = None
         self.isAnnotating = False
 
+        self.currentAnnotationViewMode = AnnotationViewMode.AllAnnotations
+
     def setCurrentAnnotationType(self, annotationType):
         """Set annotation state depending on current annotation type.
 
@@ -56,6 +63,29 @@ class AnnotationState(QtCore.QObject):
             self.isAnnotating = False
             self.stateChanged.emit()
 
+    def setCurrentAnnotationViewMode(self, annotationViewMode):
+        """Set the current annotation view mode.
+
+        Parameters
+        ----------
+        annotationViewMode : AnnotationViewMode
+            Currently active annotation view mode.
+        """
+        if not isinstance(annotationViewMode, AnnotationViewMode):
+            raise TypeError('Wrong annotationViewMode provided.')
+
+        if self.currentAnnotationViewMode != annotationViewMode:
+            self.currentAnnotationViewMode = annotationViewMode
+            self.stateChanged.emit()
+
+    def toggleAnnotationViewMode(self):
+        """Toggle the current annotation view mode, switch between all annotations and visible layers."""
+        newModeMap = {
+            AnnotationViewMode.VisibleLayers: AnnotationViewMode.AllAnnotations,
+            AnnotationViewMode.AllAnnotations: AnnotationViewMode.VisibleLayers
+        }
+        self.setCurrentAnnotationViewMode(
+            newModeMap.get(self.currentAnnotationViewMode))
 
 class AbstractAnnotator:
     """Abstract base class for Annotators."""
@@ -135,11 +165,22 @@ class AbstractAnnotator:
             layer.startEditing()
 
         layer.featureAdded.connect(self.featureAdded)
+        layer.beforeRollBack.connect(self.disconnectFeatureAdded)
+        layer.beforeCommitChanges.connect(self.disconnectFeatureAdded)
         layer.afterRollBack.connect(self.endAnnotate)
         layer.afterCommitChanges.connect(self.endAnnotate)
 
         self.main.iface.setActiveLayer(layer)
         self.main.iface.actionAddFeature().trigger()
+
+    def disconnectFeatureAdded(self):
+        """Disconnect the featureAdded signal."""
+        layer = self.getLayer()
+        try:
+            layer.featureAdded.disconnect(self.featureAdded)
+        except TypeError:
+            # when not connected we get a TypeError
+            pass
 
     def featureAdded(self, id):
         """Called when a new feature is drawn on the map.
@@ -164,7 +205,7 @@ class AbstractAnnotator:
     def stopAnnotating(self):
         """Stop annotating and commit the changes."""
         layer = self.getLayer()
-        layer.featureAdded.disconnect(self.featureAdded)
+        self.disconnectFeatureAdded()
 
         if layer.isEditable():
             layer.commitChanges()
@@ -175,11 +216,7 @@ class AbstractAnnotator:
         Called automatically after commit, so stopAnnotating() will implicitly call endAnnotate() too.
         """
         layer = self.getLayer()
-
-        try:
-            layer.featureAdded.disconnect(self.featureAdded)
-        except TypeError:
-            pass
+        self.disconnectFeatureAdded()
 
         layer.afterRollBack.disconnect(self.endAnnotate)
         layer.afterCommitChanges.disconnect(self.endAnnotate)
