@@ -1,7 +1,7 @@
 from qgis.PyQt import QtWidgets, QtGui
 from qgis.core import QgsProject
 
-from .annotate import AnnotationViewMode, PolygonAnnotator, PointAnnotator, LineAnnotator, AnnotationErrorType
+from .annotate import AnnotationViewMode, PhotoAnnotator, PolygonAnnotator, PointAnnotator, LineAnnotator, AnnotationErrorType
 from .translate import Translatable
 
 
@@ -205,6 +205,30 @@ class AnnotatePointButton(AbstractToolbarButton, Translatable):
         elif annotationErrorType == AnnotationErrorType.NoLayers:
             return self.tr('No layers available to annotate, add a layer first.')
 
+
+class AnnotatePhotoButton(AbstractToolbarButton, Translatable):
+    """Button to create a photo annotation."""
+
+    def __init__(self, main, parent=None):
+        annotator = PhotoAnnotator(main)
+        super().__init__(main, annotator, parent)
+
+    def getIconPath(self):
+        return ':/plugins/field_annotations/icons/take_photo.png'
+
+    def getToolTipValidText(self, isAnnotating):
+        if not isAnnotating:
+            return self.tr('Add a photo annotation')
+        else:
+            return self.tr('Stop annotating and save pending annotations.')
+
+    def getToolTipErrorText(self, annotationErrorType):
+        if annotationErrorType == AnnotationErrorType.AlreadyAnnotating:
+            return self.tr('Already annotating, finish annotation first.')
+        elif annotationErrorType == AnnotationErrorType.NoProject:
+            return self.tr('Cannot annotate without project, save your project first.')
+        elif annotationErrorType == AnnotationErrorType.NoLayers:
+            return self.tr('No layers available to annotate, add a layer first.')
 
 class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
     """Button to toggle between all notes and visible layer notes."""

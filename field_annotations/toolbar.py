@@ -1,4 +1,4 @@
-from .actions import AnnotatePolygonButton, AnnotateLineButton, AnnotatePointButton, ToggleAnnotationViewButton
+from .actions import AnnotatePhotoButton, AnnotatePolygonButton, AnnotateLineButton, AnnotatePointButton, ToggleAnnotationViewButton
 
 
 class FieldAnnotationsToolbar:
@@ -20,6 +20,7 @@ class FieldAnnotationsToolbar:
         self.toolbar.addWidget(AnnotatePolygonButton(self.main, self.toolbar))
         self.toolbar.addWidget(AnnotateLineButton(self.main, self.toolbar))
         self.toolbar.addWidget(AnnotatePointButton(self.main, self.toolbar))
+        self.toolbar.addWidget(AnnotatePhotoButton(self.main, self.toolbar))
         self.toolbar.addSeparator()
         self.toolbar.addWidget(
             ToggleAnnotationViewButton(self.main, self.toolbar))

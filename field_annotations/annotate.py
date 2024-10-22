@@ -1,15 +1,16 @@
 from enum import Enum
 from qgis.PyQt import QtCore
 
-from qgis.core import QgsWkbTypes, QgsEditFormConfig
+from qgis.core import QgsWkbTypes, QgsEditFormConfig, QgsField
 
 from .translate import Translatable
-from .dialog import NewAnnotationDialog
+from .dialog import NewAnnotationDialog, NewPhotoAnnotationDialog
 
 class AnnotationType(Enum):
     Point = 1
     Line = 2
     Polygon = 3
+    Photo = 4
 
 
 class AnnotationViewMode(Enum):
@@ -107,9 +108,8 @@ class AbstractAnnotator:
         QgsVectorLayer
             Data layer to save annotations to.
         """
-        layer = self.main.annotationDb.getLayer(
-            self.getLayerName(), self.getHumanLayerName(), self.getGeometryType())
-        return self.main.annotationView.addLayer(layer)
+        layer = self.main.annotationDb.getLayer(self)
+        return self.main.annotationView.addLayer(layer, self)
 
     def getLayerName(self):
         """Get the technical name of the layer.
@@ -150,6 +150,16 @@ class AbstractAnnotator:
             Implement this in a subclass.
         """
         raise NotImplementedError
+
+    def getFields(self):
+        """Get the necessary fields for this annotation type (and layer)"""
+        return [
+            QgsField('annotation', QtCore.QVariant.String),
+            QgsField('dateCreated', QtCore.QVariant.DateTime),
+            QgsField('author', QtCore.QVariant.String),
+            QgsField('layerUri', QtCore.QVariant.String),
+            QgsField('layerName', QtCore.QVariant.String)
+        ]
 
     def createAnnotation(self):
         """Create a new annotation."""
@@ -196,11 +206,23 @@ class AbstractAnnotator:
 
         feature = layer.editBuffer().addedFeatures().get(id)
         if feature is not None:
-            dlg = NewAnnotationDialog(self.main, layer, feature)
-            dlg.exec()
+            self.showAnnotationDialog(layer, feature)
 
-            if dlg.shouldStopAnnotating == True:
-                self.stopAnnotating()
+    def showAnnotationDialog(self, layer, feature):
+        """Show the new annotation dialog.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer where the annotation will be added.
+        feature : QgsFeature
+            Annotation feature that was drawn and will be added on accepting the dialog.
+        """
+        dlg = NewAnnotationDialog(self.main, layer, feature)
+        dlg.exec()
+
+        if dlg.shouldStopAnnotating == True:
+            self.stopAnnotating()
 
     def stopAnnotating(self):
         """Stop annotating and commit the changes."""
@@ -244,6 +266,7 @@ class PointAnnotator(AbstractAnnotator, Translatable):
     def getAnnotationType(self):
         return AnnotationType.Point
 
+
 class LineAnnotator(AbstractAnnotator, Translatable):
     """Annotator to create line annotations."""
     def __init__(self, main):
@@ -278,3 +301,45 @@ class PolygonAnnotator(AbstractAnnotator, Translatable):
 
     def getAnnotationType(self):
         return AnnotationType.Polygon
+
+
+class PhotoAnnotator(AbstractAnnotator, Translatable):
+    """Annotator to create photo annotations."""
+
+    def __init__(self, main):
+        super().__init__(main)
+
+    def getLayerName(self):
+        return 'photoAnnotation'
+
+    def getHumanLayerName(self):
+        return self.tr('Photo annotations')
+
+    def getGeometryType(self):
+        return QgsWkbTypes.Point
+
+    def getAnnotationType(self):
+        return AnnotationType.Photo
+
+    def getFields(self):
+        fields = super().getFields()
+        fields.extend([
+            QgsField('photoPath', QtCore.QVariant.String)
+        ])
+        return fields
+
+    def showAnnotationDialog(self, layer, feature):
+        """Show the new annotation dialog.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Vector layer where the annotation will be added.
+        feature : QgsFeature
+            Annotation feature that was drawn and will be added on accepting the dialog.
+        """
+        dlg = NewPhotoAnnotationDialog(self.main, layer, feature)
+        dlg.exec()
+
+        if dlg.shouldStopAnnotating == True:
+            self.stopAnnotating()

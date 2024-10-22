@@ -1,7 +1,8 @@
 import datetime
+import math
+
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
-from qgis.gui import QgsMapLayerComboBox
 
 from .translate import Translatable
 
@@ -33,6 +34,15 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         self.setWindowTitle(self.tr(u'New annotation'))
         self.setLayout(QtWidgets.QVBoxLayout())
 
+        self.addWidgets()
+
+    def addWidgets(self):
+        self.addAnnotationWidget()
+        self.addLayerSelectorWidget()
+        self.addButtonBoxWidget()
+        self.addShortcuts()
+
+    def addAnnotationWidget(self):
         textEditLabel = QtWidgets.QLabel(self.tr('Annotation'))
         textEditLabelFont = textEditLabel.font()
         textEditLabelFont.setItalic(True)
@@ -45,6 +55,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
             QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.layout().addWidget(self.textEdit)
 
+    def addLayerSelectorWidget(self):
         layerSelectorLabel = QtWidgets.QLabel(self.tr('For layer'))
         layerSelectorLabelFont = layerSelectorLabel.font()
         layerSelectorLabelFont.setItalic(True)
@@ -60,6 +71,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
                 ':/plugins/field_annotations/icons/map.png'), l.name(), l)
             self.layout().addWidget(self.layerSelector)
 
+    def addButtonBoxWidget(self):
         buttonBox = QtWidgets.QDialogButtonBox(self)
         buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
 
@@ -72,38 +84,39 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         cancelButton.clicked.connect(self.reject)
 
-        okButton = QtWidgets.QToolButton(self)
-        okButton.setText(self.tr('&Ok'))
-        okButton.setIcon(QtGui.QIcon(
+        self.okButton = QtWidgets.QToolButton(self)
+        self.okButton.setText(self.tr('&Ok'))
+        self.okButton.setIcon(QtGui.QIcon(
             ':/plugins/field_annotations/icons/ok.png'))
-        okButton.setIconSize(QtCore.QSize(32, 32))
-        okButton.setToolButtonStyle(
+        self.okButton.setIconSize(QtCore.QSize(32, 32))
+        self.okButton.setToolButtonStyle(
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        okButton.clicked.connect(lambda: self.accept(True))
+        self.okButton.clicked.connect(lambda: self.accept(True))
 
         buttonBox.addButton(
             cancelButton, QtWidgets.QDialogButtonBox.ButtonRole.RejectRole)
         buttonBox.addButton(
-            okButton, QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole)
+            self.okButton, QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole)
         self.layout().addWidget(buttonBox)
 
-        okShortcut = QtGui.QShortcut(self)
-        okShortcut.setKey(QtGui.QKeySequence('Ctrl+Return'))
-        okShortcut.activated.connect(lambda: self.accept(True))
+    def addShortcuts(self):
+        self.okShortcutCtrlReturn = QtGui.QShortcut(self)
+        self.okShortcutCtrlReturn.setKey(QtGui.QKeySequence('Ctrl+Return'))
+        self.okShortcutCtrlReturn.activated.connect(lambda: self.accept(True))
 
-        okShortcut = QtGui.QShortcut(self)
-        okShortcut.setKey(QtGui.QKeySequence('Ctrl+S'))
-        okShortcut.activated.connect(lambda: self.accept(True))
+        self.okShortcutCtrlS = QtGui.QShortcut(self)
+        self.okShortcutCtrlS.setKey(QtGui.QKeySequence('Ctrl+S'))
+        self.okShortcutCtrlS.activated.connect(lambda: self.accept(True))
 
-        okFinishShortcut = QtGui.QShortcut(self)
-        okFinishShortcut.setKey(QtGui.QKeySequence('Ctrl+Shift+Return'))
-        okFinishShortcut.activated.connect(self.acceptFinish)
+        self.okFinishShortcut = QtGui.QShortcut(self)
+        self.okFinishShortcut.setKey(QtGui.QKeySequence('Ctrl+Shift+Return'))
+        self.okFinishShortcut.activated.connect(self.acceptFinish)
 
         cancelShortcut = QtGui.QShortcut(self)
         cancelShortcut.setKey(QtGui.QKeySequence('Ctrl+Q'))
         cancelShortcut.activated.connect(self.reject)
 
-        self.adjustSize()
+        # self.adjustSize()
 
     def accept(self, superAccept=True):
         """Update the feature with the annotation text and other data values.
@@ -150,3 +163,141 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         """
         self.layer.editBuffer().deleteFeature(self.feature.id())
         super().reject()
+
+
+class PhotoWidget(QtWidgets.QWidget, Translatable):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.photoImages = []
+
+        layout = QtWidgets.QGridLayout()
+        layout.setHorizontalSpacing(10)
+        layout.setVerticalSpacing(10)
+
+        # self.scrollWidget = QtWidgets.QScrollArea(self)
+        # self.scrollWidget.setLayout(layout)
+
+        self.setLayout(layout)
+        # self.layout().addWidget(self.scrollWidget)
+
+        # QtWidgets.QScroller.grabGesture(
+        #     self.scrollWidget.viewport(), QtWidgets.QScroller.LeftMouseButtonGesture)
+
+    def addPhotos(self, photos):
+        for i in reversed(range(self.layout().count())):
+            try:
+                self.layout().itemAt(i).widget().setParent(None)
+            except AttributeError:
+                continue
+
+        for photo in photos:
+            photoImage = QtGui.QImage(photo).scaledToWidth(self.width())
+            self.photoImages.append(photoImage)
+
+        size = math.ceil(math.sqrt(len(self.photoImages)))
+        print(size)
+        for i in range(size):
+            for ix, photoImage in enumerate(self.photoImages[(i*size): ((i*size)+size)]):
+                photoLabel = QtWidgets.QLabel(self)
+                photoLabel.setPixmap(QtGui.QPixmap.fromImage(photoImage))
+                photoLabel.setMinimumSize(100, 100)
+                print('adding photo', i, ix, photoLabel)
+                self.layout().addWidget(
+                    photoLabel, i, ix, QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        self.adjustSize()
+
+
+class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
+    photoListChanged = QtCore.pyqtSignal()
+
+    def __init__(self, main, layer, feature):
+        self.photosToAdd = []
+
+        super().__init__(main, layer, feature)
+
+        self.setWindowTitle(self.tr(u'New photo annotation'))
+
+        self.textEdit.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Minimum)
+
+        self.connectValidate()
+
+    def connectValidate(self):
+        self.photoListChanged.connect(self.validate)
+
+    def validate(self):
+        hasPhotos = len(self.photosToAdd) > 0
+
+        if not hasPhotos:
+            self.textEdit.setText("")
+
+        self.textEdit.setEnabled(hasPhotos)
+        self.okButton.setEnabled(hasPhotos)
+        self.okShortcutCtrlReturn.setEnabled(hasPhotos)
+        self.okShortcutCtrlS.setEnabled(hasPhotos)
+        self.okFinishShortcut.setEnabled(hasPhotos)
+
+    def addPhotos(self, photos):
+        self.photosToAdd.extend(photos)
+        self.photoWidget.addPhotos(photos)
+        self.photoListChanged.emit()
+
+    def addWidgets(self):
+        self.addPhotoButtonWidget()
+        self.addPhotoWidget()
+        self.addAnnotationWidget()
+        self.addLayerSelectorWidget()
+        self.addButtonBoxWidget()
+        self.addShortcuts()
+
+        self.validate()
+
+    def addPhotoButtonWidget(self):
+        photoButtonWidget = QtWidgets.QWidget(self)
+        photoButtonWidget.setLayout(QtWidgets.QHBoxLayout())
+
+        photoButtonWidget.layout().addStretch()
+
+        takePhotoButton = QtWidgets.QToolButton(self)
+        takePhotoButton.setText(self.tr('&Take photo'))
+        takePhotoButton.setIcon(QtGui.QIcon(
+            ':/plugins/field_annotations/icons/take_photo.png'))
+        takePhotoButton.setIconSize(QtCore.QSize(32, 32))
+        takePhotoButton.setToolButtonStyle(
+            QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        takePhotoButton.clicked.connect(self.takePhoto)
+        photoButtonWidget.layout().addWidget(takePhotoButton)
+
+        importPhotoButton = QtWidgets.QToolButton(self)
+        importPhotoButton.setText(self.tr('&Import photos'))
+        importPhotoButton.setIcon(QtGui.QIcon(
+            ':/plugins/field_annotations/icons/import_photo.png'))
+        importPhotoButton.setIconSize(QtCore.QSize(32, 32))
+        importPhotoButton.setToolButtonStyle(
+            QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        importPhotoButton.clicked.connect(self.importPhoto)
+        photoButtonWidget.layout().addWidget(importPhotoButton)
+
+        self.layout().addWidget(photoButtonWidget)
+
+    def addPhotoWidget(self):
+        self.photoWidget = PhotoWidget(self)
+        self.layout().addWidget(self.photoWidget)
+
+    def takePhoto(self):
+        print('taking photo')
+
+    def importPhoto(self):
+        print('import photos')
+        photoSelectionDialog = QtWidgets.QFileDialog(self)
+        photoSelectionDialog.setWindowTitle(self.tr('Import photos'))
+        photoSelectionDialog.setFileMode(
+            QtWidgets.QFileDialog.FileMode.ExistingFiles)
+        photoSelectionDialog.setNameFilter(
+            self.tr("Images (*.jpg *.jpeg *.png *.JPG *.JPEG *.PNG)"))
+
+        if photoSelectionDialog.exec_():
+            self.addPhotos(photoSelectionDialog.selectedFiles())

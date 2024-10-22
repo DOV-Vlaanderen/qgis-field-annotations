@@ -39,21 +39,17 @@ class AnnotationDb:
         else:
             self.dbPath = None
 
-    def getLayer(self, layerName, humanLayerName, geometryType):
-        """Get required data layer based on the parameters.
+    def getLayer(self, annotator):
+        """Get required data layer based on given annotator.
 
         Will create the database and the layer if it does not already exist.
 
         Parameters
         ----------
-        layerName : str
-            Technical name of the layer.
-        humanLayerName : str
-            Human readable name of the layer.
-        geometryType : QgsWkbTypes
-            Geometry type of the layer.
+        annotator : AbstractAnnotator
+            Annotator instance to get the layer for.
         """
-        def createNewGpkgLayer(layerName, geometryType, fileExists):
+        def createNewGpkgLayer(layerName, geometryType, fields, fileExists):
             """Create a new geopackage layer.
 
             If the database does not exist already, it will create the database and the layer.
@@ -66,6 +62,8 @@ class AnnotationDb:
                 Technical name of the layer.
             geometryType : QgsWkbTypes
                 Geometry type of the layer.
+            fields : list of QgsField
+                List of fields for the layer.
             fileExists : bool
                 True if the database already exists, False otherwise.
 
@@ -76,11 +74,8 @@ class AnnotationDb:
             """
             schema = QgsFields()
 
-            schema.append(QgsField('annotation', QtCore.QVariant.String))
-            schema.append(QgsField('dateCreated', QtCore.QVariant.DateTime))
-            schema.append(QgsField('author', QtCore.QVariant.String))
-            schema.append(QgsField('layerUri', QtCore.QVariant.String))
-            schema.append(QgsField('layerName', QtCore.QVariant.String))
+            for field in fields:
+                schema.append(field)
 
             crs = QgsCoordinateReferenceSystem('epsg:4326')
             options = QgsVectorFileWriter.SaveVectorOptions()
@@ -102,8 +97,14 @@ class AnnotationDb:
             raise RuntimeError(
                 'Cannot get annotation layer without project.')
 
+        layerName = annotator.getLayerName()
+        humanLayerName = annotator.getHumanLayerName()
+        geometryType = annotator.getGeometryType()
+        fields = annotator.getFields()
+
         if not os.path.exists(self.dbPath):
-            createNewGpkgLayer(layerName, geometryType, fileExists=False)
+            createNewGpkgLayer(layerName, geometryType,
+                               fields, fileExists=False)
         else:
             # check if layer already exists in database
             db = QgsVectorLayer(self.dbPath, "test", "ogr")
@@ -111,7 +112,8 @@ class AnnotationDb:
                       for l in db.dataProvider().subLayers()]
 
             if layerName not in layers:
-                createNewGpkgLayer(layerName, geometryType, fileExists=True)
+                createNewGpkgLayer(layerName, geometryType,
+                                   fields, fileExists=True)
 
         return QgsVectorLayer(f'{self.dbPath}|layername={layerName}', humanLayerName, "ogr")
 
