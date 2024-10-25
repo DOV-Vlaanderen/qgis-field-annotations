@@ -4,6 +4,8 @@ import math
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
 
+from .photo import PhotoAspectRatioLabel, ImageDisplayWidget, QResizingPixmapLabel
+
 from .translate import Translatable
 
 
@@ -175,6 +177,9 @@ class PhotoWidget(QtWidgets.QWidget, Translatable):
         layout.setHorizontalSpacing(10)
         layout.setVerticalSpacing(10)
 
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+
         # self.scrollWidget = QtWidgets.QScrollArea(self)
         # self.scrollWidget.setLayout(layout)
 
@@ -192,16 +197,21 @@ class PhotoWidget(QtWidgets.QWidget, Translatable):
                 continue
 
         for photo in photos:
-            photoImage = QtGui.QImage(photo).scaledToWidth(self.width())
+            imageReader = QtGui.QImageReader(photo)
+            imageReader.setAutoTransform(True)
+            photoImage = imageReader.read()
             self.photoImages.append(photoImage)
 
         size = math.ceil(math.sqrt(len(self.photoImages)))
         print(size)
         for i in range(size):
             for ix, photoImage in enumerate(self.photoImages[(i*size): ((i*size)+size)]):
-                photoLabel = QtWidgets.QLabel(self)
+                photoLabel = QResizingPixmapLabel(self)
+                photoLabel.setSizePolicy(
+                    QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
                 photoLabel.setPixmap(QtGui.QPixmap.fromImage(photoImage))
                 photoLabel.setMinimumSize(100, 100)
+                # photoLabel.adjustSize()
                 print('adding photo', i, ix, photoLabel)
                 self.layout().addWidget(
                     photoLabel, i, ix, QtCore.Qt.AlignmentFlag.AlignCenter)

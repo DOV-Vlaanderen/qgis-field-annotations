@@ -6,6 +6,7 @@ from qgis.core import QgsWkbTypes, QgsEditFormConfig, QgsField
 from .translate import Translatable
 from .dialog import NewAnnotationDialog, NewPhotoAnnotationDialog
 
+
 class AnnotationType(Enum):
     Point = 1
     Line = 2
@@ -88,8 +89,10 @@ class AnnotationState(QtCore.QObject):
         self.setCurrentAnnotationViewMode(
             newModeMap.get(self.currentAnnotationViewMode))
 
+
 class AbstractAnnotator:
     """Abstract base class for Annotators."""
+
     def __init__(self, main):
         """Initialisation.
 
@@ -240,8 +243,8 @@ class AbstractAnnotator:
         layer = self.getLayer()
         self.disconnectFeatureAdded()
 
-        layer.afterRollBack.disconnect(self.endAnnotate)
-        layer.afterCommitChanges.disconnect(self.endAnnotate)
+        # layer.afterRollBack.disconnect(self.endAnnotate)
+        # layer.afterCommitChanges.disconnect(self.endAnnotate)
 
         if layer.isEditable():
             layer.endEditCommand()
@@ -251,6 +254,7 @@ class AbstractAnnotator:
 
 class PointAnnotator(AbstractAnnotator, Translatable):
     """Annotator to create point annotations."""
+
     def __init__(self, main):
         super().__init__(main)
 
@@ -269,6 +273,7 @@ class PointAnnotator(AbstractAnnotator, Translatable):
 
 class LineAnnotator(AbstractAnnotator, Translatable):
     """Annotator to create line annotations."""
+
     def __init__(self, main):
         super().__init__(main)
 
@@ -287,6 +292,7 @@ class LineAnnotator(AbstractAnnotator, Translatable):
 
 class PolygonAnnotator(AbstractAnnotator, Translatable):
     """Annotator to create polygon annotations."""
+
     def __init__(self, main):
         super().__init__(main)
 
