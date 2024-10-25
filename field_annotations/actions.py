@@ -120,7 +120,7 @@ class AbstractToolbarButton(QtWidgets.QToolButton):
             self.setEnabled(False)
             self.setToolTip(self.getToolTipErrorText(
                 AnnotationErrorType.NoLayers))
-            if self.main.annotationState.isAnnotating:
+            if self.main.annotationState.currentAnnotationType == self.annotator.getAnnotationType():
                 self.annotator.stopAnnotating()
 
     def run(self):
