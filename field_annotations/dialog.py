@@ -170,6 +170,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 class PhotoWidget(QtWidgets.QWidget, Translatable):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent = parent
 
         self.photoImages = []
 

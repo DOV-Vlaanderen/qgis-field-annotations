@@ -8,6 +8,20 @@ class QResizingPixmapLabel(QtWidgets.QLabel):
         self.setScaledContents(False)
         self._pixmap = None
 
+        self.softRemove = False
+
+    def mouseDoubleClickEvent(self, event):
+        if self._pixmap is not None:
+            self.softRemove = not self.softRemove
+
+            effect = QtWidgets.QGraphicsOpacityEffect(self)
+            effect.setOpacity(0.3)
+
+            if self.softRemove:
+                self.setGraphicsEffect(effect)
+            else:
+                self.setGraphicsEffect(None)
+
     def heightForWidth(self, width):
         if self._pixmap is None:
             return int(self.height())
@@ -35,7 +49,6 @@ class QResizingPixmapLabel(QtWidgets.QLabel):
         if self._pixmap is not None:
             super().setPixmap(self.scaledPixmap())
             self.setAlignment(QtCore.Qt.AlignCenter)
-
 
 class ImageDisplayWidget(QtWidgets.QLabel):
     def __init__(self, parent, max_enlargement=2.0):
