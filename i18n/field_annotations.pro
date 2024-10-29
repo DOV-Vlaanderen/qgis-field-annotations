@@ -1,2 +1,2 @@
-SOURCES = ../fieldannotations.py ../field_annotations/actions.py ../field_annotations/annotate.py ../field_annotations/config.py ../field_annotations/data.py ../field_annotations/dialog.py ../field_annotations/mapview.py ../field_annotations/toolbar.py
+SOURCES = ../fieldannotations.py ../field_annotations/actions.py ../field_annotations/annotate.py ../field_annotations/config.py ../field_annotations/data.py ../field_annotations/dialog.py ../field_annotations/mapview.py ../field_annotations/photo.py ../field_annotations/toolbar.py
 TRANSLATIONS = FieldAnnotations_en.ts FieldAnnotations_nl.ts

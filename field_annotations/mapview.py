@@ -1,35 +1,37 @@
 import re
+from pathlib import Path
 
 from qgis.core import (
     QgsProject, QgsFillSymbol, QgsLineSymbol, QgsArrowSymbolLayer, QgsMarkerSymbol, Qgis, QgsPalLayerSettings,
-    QgsTextFormat, QgsTextBufferSettings, QgsVectorLayerSimpleLabeling)
+    QgsTextFormat, QgsTextBufferSettings, QgsVectorLayerSimpleLabeling, QgsSvgMarkerSymbolLayer, QgsEditorWidgetSetup,
+    QgsRuleBasedRenderer)
 from qgis.PyQt import QtGui
 
-from .annotate import AnnotationViewMode
+from .annotate import AnnotationType, AnnotationViewMode
 from .translate import Translatable
 
 
 class AnnotationLayerStyler:
     """Class with helper methods to style new annotation layers."""
     @staticmethod
-    def styleLayer(layer):
+    def styleLayer(layer, annotator):
         """Entry method to style a layer.
 
-        Will call the relevant method depending on the layers geometry type.
+        Will call the relevant method depending on the layers annotation type.
 
         Parameters
         ----------
         layer : QgsVectorLayer
             Vector layer to style.
         """
-        geometryType = layer.geometryType()
-
-        if geometryType == Qgis.GeometryType.Polygon:
+        if annotator.getAnnotationType() == AnnotationType.Polygon:
             AnnotationLayerStyler.stylePolygonLayer(layer)
-        elif geometryType == Qgis.GeometryType.Line:
+        elif annotator.getAnnotationType() == AnnotationType.Line:
             AnnotationLayerStyler.styleLineLayer(layer)
-        elif geometryType == Qgis.GeometryType.Point:
+        elif annotator.getAnnotationType() == AnnotationType.Point:
             AnnotationLayerStyler.stylePointLayer(layer)
+        elif annotator.getAnnotationType() == AnnotationType.Photo:
+            AnnotationLayerStyler.stylePhotoLayer(layer)
 
         AnnotationLayerStyler.styleLabels(layer)
 
@@ -48,6 +50,26 @@ class AnnotationLayerStyler:
         props['outline_width'] = '1'
         layer.renderer().setSymbol(
             QgsFillSymbol.createSimple(props))
+
+        rootRule = QgsRuleBasedRenderer.Rule(
+            QgsFillSymbol.createSimple(props),
+            elseRule=True)
+
+        savedRule = QgsRuleBasedRenderer.Rule(
+            QgsFillSymbol.createSimple(props),
+            filterExp='@id >= 0')
+        rootRule.appendChild(savedRule)
+
+        props['color'] = '244,239,247,64'
+        props['outline_color'] = '184,144,207,255'
+
+        unsavedRule = QgsRuleBasedRenderer.Rule(
+            QgsFillSymbol.createSimple(props),
+            filterExp='@id < 0')
+        rootRule.appendChild(unsavedRule)
+
+        ruleRenderer = QgsRuleBasedRenderer(rootRule)
+        layer.setRenderer(ruleRenderer)
 
     @staticmethod
     def styleLineLayer(layer):
@@ -72,7 +94,36 @@ class AnnotationLayerStyler:
         props['outline_style'] = 'no'
         arrow.setSubSymbol(QgsFillSymbol.createSimple(props))
 
-        layer.renderer().setSymbol(lineSymbol)
+        rootRule = QgsRuleBasedRenderer.Rule(
+            lineSymbol,
+            elseRule=True)
+
+        savedRule = QgsRuleBasedRenderer.Rule(
+            lineSymbol,
+            filterExp='@id >= 0')
+        rootRule.appendChild(savedRule)
+
+        props = layer.renderer().symbol().symbolLayer(0).properties()
+        lineSymbol = QgsLineSymbol.createSimple(props)
+
+        arrow = QgsArrowSymbolLayer.create(
+            {'is_curved': '0', 'is_repeated': '1'})
+        lineSymbol.changeSymbolLayer(0, arrow)
+
+        props = arrow.subSymbol().symbolLayer(0).properties()
+        props['color'] = '244,239,247,64'
+        props['outline_color'] = '184,144,207,255'
+        props['outline_width'] = '0'
+        props['outline_style'] = 'no'
+        arrow.setSubSymbol(QgsFillSymbol.createSimple(props))
+
+        unsavedRule = QgsRuleBasedRenderer.Rule(
+            lineSymbol,
+            filterExp='@id < 0')
+        rootRule.appendChild(unsavedRule)
+
+        ruleRenderer = QgsRuleBasedRenderer(rootRule)
+        layer.setRenderer(ruleRenderer)
 
     @staticmethod
     def stylePointLayer(layer):
@@ -88,8 +139,96 @@ class AnnotationLayerStyler:
         props['outline_color'] = '112,68,134,255'
         props['size'] = '3.8'
         props['outline_width'] = '0.6'
-        layer.renderer().setSymbol(
-            QgsMarkerSymbol.createSimple(props))
+
+        rootRule = QgsRuleBasedRenderer.Rule(
+            QgsMarkerSymbol.createSimple(props),
+            elseRule=True)
+
+        savedRule = QgsRuleBasedRenderer.Rule(
+            QgsMarkerSymbol.createSimple(props),
+            filterExp='@id >= 0')
+        rootRule.appendChild(savedRule)
+
+        props['color'] = '244,239,247,64'
+        props['outline_color'] = '184,144,207,255'
+
+        unsavedRule = QgsRuleBasedRenderer.Rule(
+            QgsMarkerSymbol.createSimple(props),
+            filterExp='@id < 0')
+        rootRule.appendChild(unsavedRule)
+
+        ruleRenderer = QgsRuleBasedRenderer(rootRule)
+
+        layer.setRenderer(ruleRenderer)
+
+    @staticmethod
+    def stylePhotoLayer(layer):
+        """Style a photo layer.
+
+        Parameters
+        ----------
+        layer : QgsVectorLayer
+            Photo layer to style.
+        """
+        props = layer.renderer().symbol().symbolLayer(0).properties()
+        markerSymbol = QgsMarkerSymbol.createSimple(props)
+
+        icon_path = str(Path(__file__).parent.parent.joinpath(
+            'style_icons', 'camera.svg'))
+
+        svgMarker = QgsSvgMarkerSymbolLayer.create({'name': icon_path})
+
+        props = svgMarker.properties()
+        props['color'] = '112,68,134,255'
+        props['outline_color'] = '255,255,255,255'
+        props['size'] = '8'
+        props['outline_width'] = '0.1'
+
+        svgMarker = QgsSvgMarkerSymbolLayer.create(props)
+        markerSymbol.changeSymbolLayer(0, svgMarker)
+
+        rootRule = QgsRuleBasedRenderer.Rule(
+            markerSymbol,
+            elseRule=True)
+
+        savedRule = QgsRuleBasedRenderer.Rule(
+            markerSymbol,
+            filterExp='@id >= 0')
+        rootRule.appendChild(savedRule)
+
+        props = layer.renderer().symbol().symbolLayer(0).properties()
+        markerSymbol = QgsMarkerSymbol.createSimple(props)
+
+        icon_path = str(Path(__file__).parent.parent.joinpath(
+            'style_icons', 'camera.svg'))
+
+        svgMarker = QgsSvgMarkerSymbolLayer.create({'name': icon_path})
+
+        props = svgMarker.properties()
+        props['color'] = '200,185,208,64'
+        props['outline_color'] = '133,124,138,255'
+        props['size'] = '8'
+        props['outline_width'] = '0.1'
+
+        svgMarker = QgsSvgMarkerSymbolLayer.create(props)
+        markerSymbol.changeSymbolLayer(0, svgMarker)
+
+        unsavedRule = QgsRuleBasedRenderer.Rule(
+            markerSymbol,
+            filterExp='@id < 0')
+        rootRule.appendChild(unsavedRule)
+
+        ruleRenderer = QgsRuleBasedRenderer(rootRule)
+
+        layer.setRenderer(ruleRenderer)
+
+        editorConfig = QgsEditorWidgetSetup('ExternalResource', {
+            'FileWidget': True,
+            'FileWidgetButton': False,
+            'UseLink': True
+        })
+        layer.setEditorWidgetSetup(
+            layer.fields().indexOf('photoPath'), editorConfig)
 
     @staticmethod
     def styleLabels(layer, field='annotation'):
@@ -236,7 +375,7 @@ class AnnotationView(Translatable):
         """
         return self.findLayer(layer) is not None
 
-    def addLayer(self, layer):
+    def addLayer(self, layer, annotator):
         """Add the given vector layer to the map.
 
         Will return an existing layer if it was already added to the map.
@@ -245,6 +384,8 @@ class AnnotationView(Translatable):
         ----------
         layer : QgsVectorLayer
             Vector layer to add.
+        annotator : AbstractAnnotator
+            Annotator this layer is associated to.
 
         Returns
         -------
@@ -262,7 +403,7 @@ class AnnotationView(Translatable):
 
         if not self.hasLayer(layer):
             QgsProject.instance().addMapLayer(layer, addToLegend=False)
-            AnnotationLayerStyler.styleLayer(layer)
+            AnnotationLayerStyler.styleLayer(layer, annotator)
             annotationGroup.addLayer(layer)
             return layer
         else:
