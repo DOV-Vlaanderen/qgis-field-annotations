@@ -1,5 +1,9 @@
 import datetime
 import math
+import os
+import shutil
+import time
+import uuid
 
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
@@ -181,14 +185,7 @@ class PhotoWidget(QtWidgets.QWidget, Translatable):
         self.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 
-        # self.scrollWidget = QtWidgets.QScrollArea(self)
-        # self.scrollWidget.setLayout(layout)
-
         self.setLayout(layout)
-        # self.layout().addWidget(self.scrollWidget)
-
-        # QtWidgets.QScroller.grabGesture(
-        #     self.scrollWidget.viewport(), QtWidgets.QScroller.LeftMouseButtonGesture)
 
     def removePhoto(self, photo):
         keepPhotos = [p[0] for p in self.photos if p[0] != photo]
@@ -210,7 +207,6 @@ class PhotoWidget(QtWidgets.QWidget, Translatable):
             self.photos.append((photo, photoImage))
 
         size = math.ceil(math.sqrt(len(self.photos)))
-        print(size)
         for i in range(size):
             for ix, photo in enumerate(self.photos[(i*size): ((i*size)+size)]):
                 photoLabel = QResizingPixmapPreviewLabel(
@@ -218,8 +214,6 @@ class PhotoWidget(QtWidgets.QWidget, Translatable):
                 photoLabel.setSizePolicy(
                     QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
                 photoLabel.setMinimumSize(100, 100)
-                # photoLabel.adjustSize()
-                print('adding photo', i, ix, photoLabel)
                 self.layout().addWidget(
                     photoLabel, i, ix, QtCore.Qt.AlignmentFlag.AlignCenter)
 
@@ -274,6 +268,7 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.addPhotoWidget()
         self.addAnnotationWidget()
         self.addLayerSelectorWidget()
+        self.addProgressWidget()
         self.addButtonBoxWidget()
         self.addShortcuts()
 
@@ -312,6 +307,12 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.photoWidget.photoListChanged.connect(self.updatePhotos)
         self.layout().addWidget(self.photoWidget)
 
+    def addProgressWidget(self):
+        self.progressWidget = QtWidgets.QProgressBar(self)
+        self.progressWidget.setEnabled(False)
+        self.progressWidget.setVisible(False)
+        self.layout().addWidget(self.progressWidget)
+
     def takePhoto(self):
         print('taking photo')
 
@@ -326,3 +327,35 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
         if photoSelectionDialog.exec_():
             self.addPhotos(photoSelectionDialog.selectedFiles())
+
+    def copyPhotos(self):
+        self.setEnabled(False)
+        self.progressWidget.setEnabled(True)
+        self.progressWidget.setVisible(True)
+        self.progressWidget.setMaximum(len(self.photosToAdd))
+        counter = 0
+        self.progressWidget.setValue(counter)
+
+        annotationId = str(uuid.uuid4())
+        destFolder = os.path.join(self.main.config.photoPath, annotationId)
+
+        if not os.path.exists(destFolder):
+            os.makedirs(destFolder)
+
+        for photo in self.photosToAdd:
+            destFile = os.path.join(destFolder, os.path.basename(photo))
+            shutil.copyfile(photo, destFile)
+            counter += 1
+            self.progressWidget.setValue(counter)
+
+        return destFolder
+
+    def accept(self, superAccept=True):
+        photoPath = self.copyPhotos()
+
+        self.layer.editBuffer().changeAttributeValues(
+            self.feature.id(), {
+                self.layer.fields().indexOf('photoPath'): photoPath
+            }, {})
+
+        super().accept(superAccept)

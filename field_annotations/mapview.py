@@ -3,7 +3,7 @@ from pathlib import Path
 
 from qgis.core import (
     QgsProject, QgsFillSymbol, QgsLineSymbol, QgsArrowSymbolLayer, QgsMarkerSymbol, Qgis, QgsPalLayerSettings,
-    QgsTextFormat, QgsTextBufferSettings, QgsVectorLayerSimpleLabeling, QgsSvgMarkerSymbolLayer)
+    QgsTextFormat, QgsTextBufferSettings, QgsVectorLayerSimpleLabeling, QgsSvgMarkerSymbolLayer, QgsEditorWidgetSetup)
 from qgis.PyQt import QtGui
 
 from .annotate import AnnotationType, AnnotationViewMode
@@ -119,6 +119,14 @@ class AnnotationLayerStyler:
         markerSymbol.changeSymbolLayer(0, svgMarker)
 
         layer.renderer().setSymbol(markerSymbol)
+
+        editorConfig = QgsEditorWidgetSetup('ExternalResource', {
+            'FileWidget': True,
+            'FileWidgetButton': False,
+            'UseLink': True
+        })
+        layer.setEditorWidgetSetup(
+            layer.fields().indexOf('photoPath'), editorConfig)
 
     @staticmethod
     def styleLabels(layer, field='annotation'):
