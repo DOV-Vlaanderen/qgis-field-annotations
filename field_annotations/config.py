@@ -48,7 +48,7 @@ class Config(QtCore.QObject, Translatable):
         QgsProject.instance().projectSaved.connect(self.populate)
 
     def populate(self):
-        """Set the database path according to project state."""
+        """Set the database and photo paths according to project state."""
         basePath = QgsProject.instance().absolutePath()
         projectName = QgsProject.instance().baseName()
 

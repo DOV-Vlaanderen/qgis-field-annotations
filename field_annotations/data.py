@@ -1,7 +1,6 @@
 import os
 
-from qgis.PyQt import QtCore
-from qgis.core import (QgsFields, QgsField, QgsCoordinateReferenceSystem,
+from qgis.core import (QgsFields, QgsCoordinateReferenceSystem,
                        QgsVectorFileWriter, QgsCoordinateTransformContext, QgsVectorLayer, QgsDataProvider)
 from qgis.core import QgsProject
 

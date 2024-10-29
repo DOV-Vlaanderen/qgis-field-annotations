@@ -1,16 +1,13 @@
 import datetime
-import math
 import os
 import shutil
-import time
 import uuid
 
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
 
-from .photo import QResizingPixmapPreviewLabel
-
 from .translate import Translatable
+from .photo import PhotoWidget
 
 
 class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
@@ -43,12 +40,14 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         self.addWidgets()
 
     def addWidgets(self):
+        """Add the necessary widgets to the dialog."""
         self.addAnnotationWidget()
         self.addLayerSelectorWidget()
         self.addButtonBoxWidget()
         self.addShortcuts()
 
     def addAnnotationWidget(self):
+        """Add the widget to write the annotation text."""
         textEditLabel = QtWidgets.QLabel(self.tr('Annotation'))
         textEditLabelFont = textEditLabel.font()
         textEditLabelFont.setItalic(True)
@@ -62,6 +61,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         self.layout().addWidget(self.textEdit)
 
     def addLayerSelectorWidget(self):
+        """Add the widget to select an annotatable layer."""
         layerSelectorLabel = QtWidgets.QLabel(self.tr('For layer'))
         layerSelectorLabelFont = layerSelectorLabel.font()
         layerSelectorLabelFont.setItalic(True)
@@ -78,6 +78,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
             self.layout().addWidget(self.layerSelector)
 
     def addButtonBoxWidget(self):
+        """Add the button box widget with the dialog's ok and cancel buttons."""
         buttonBox = QtWidgets.QDialogButtonBox(self)
         buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
 
@@ -106,6 +107,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         self.layout().addWidget(buttonBox)
 
     def addShortcuts(self):
+        """Add the keyboard shortcuts."""
         self.okShortcutCtrlReturn = QtGui.QShortcut(self)
         self.okShortcutCtrlReturn.setKey(QtGui.QKeySequence('Ctrl+Return'))
         self.okShortcutCtrlReturn.activated.connect(lambda: self.accept(True))
@@ -169,64 +171,23 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         super().reject()
 
 
-class PhotoWidget(QtWidgets.QWidget, Translatable):
-    photoListChanged = QtCore.pyqtSignal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.parent = parent
-
-        self.photos = []
-
-        layout = QtWidgets.QGridLayout()
-        layout.setHorizontalSpacing(10)
-        layout.setVerticalSpacing(10)
-
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
-
-        self.setLayout(layout)
-
-    def removePhoto(self, photo):
-        keepPhotos = [p[0] for p in self.photos if p[0] != photo]
-        self.photos.clear()
-        self.addPhotos(keepPhotos)
-        self.photoListChanged.emit()
-
-    def addPhotos(self, photos):
-        for i in reversed(range(self.layout().count())):
-            try:
-                self.layout().itemAt(i).widget().setParent(None)
-            except AttributeError:
-                continue
-
-        for photo in photos:
-            imageReader = QtGui.QImageReader(photo)
-            imageReader.setAutoTransform(True)
-            photoImage = imageReader.read()
-            self.photos.append((photo, photoImage))
-
-        size = math.ceil(math.sqrt(len(self.photos)))
-        for i in range(size):
-            for ix, photo in enumerate(self.photos[(i*size): ((i*size)+size)]):
-                photoLabel = QResizingPixmapPreviewLabel(
-                    photo[0], photo[1], self)
-                photoLabel.setSizePolicy(
-                    QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
-                photoLabel.setMinimumSize(100, 100)
-                self.layout().addWidget(
-                    photoLabel, i, ix, QtCore.Qt.AlignmentFlag.AlignCenter)
-
-        self.adjustSize()
-
-    def getPhotos(self):
-        return [p[0] for p in self.photos]
-
-
 class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
+    """Dialog to add photos and enter details of a new photo annotation."""
+
     photoListChanged = QtCore.pyqtSignal()
 
     def __init__(self, main, layer, feature):
+        """Initialisation.
+
+        Parameters
+        ----------
+        main : FieldAnnotations
+            Reference to main plugin instance.
+        layer : QgsVectorLayer
+            Vector layer where the annotation will be added.
+        feature : QgsFeature
+            Annotation feature that was drawn and will be added on accepting the dialog.
+        """
         self.photosToAdd = []
 
         super().__init__(main, layer, feature)
@@ -240,9 +201,11 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.connectValidate()
 
     def connectValidate(self):
+        """Connect the validation method to the changes of state that should trigger validation."""
         self.photoListChanged.connect(self.validate)
 
     def validate(self):
+        """Validate the state: only allow saving if there is at least one photo."""
         hasPhotos = len(self.photosToAdd) > 0
 
         if not hasPhotos:
@@ -255,15 +218,24 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.okFinishShortcut.setEnabled(hasPhotos)
 
     def addPhotos(self, photos):
+        """Add the given photos to the list of photos that will be saved with the annotation.
+
+        Parameters
+        ----------
+        photos : list of str
+            List of absolute paths of photos to add.
+        """
         self.photosToAdd.extend(photos)
         self.photoWidget.addPhotos(photos)
         self.photoListChanged.emit()
 
     def updatePhotos(self):
+        """Update the list of photos based on the photos returned from the photo widget."""
         self.photosToAdd = self.photoWidget.getPhotos()
         self.photoListChanged.emit()
 
     def addWidgets(self):
+        """Add the necessary widgets to the dialog and validate."""
         self.addPhotoButtonWidget()
         self.addPhotoWidget()
         self.addAnnotationWidget()
@@ -275,6 +247,7 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.validate()
 
     def addPhotoButtonWidget(self):
+        """Add the widget with the photo buttons."""
         photoButtonWidget = QtWidgets.QWidget(self)
         photoButtonWidget.setLayout(QtWidgets.QHBoxLayout())
 
@@ -303,11 +276,13 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.layout().addWidget(photoButtonWidget)
 
     def addPhotoWidget(self):
+        """Add the photo widget to show added photos."""
         self.photoWidget = PhotoWidget(self)
         self.photoWidget.photoListChanged.connect(self.updatePhotos)
         self.layout().addWidget(self.photoWidget)
 
     def addProgressWidget(self):
+        """Add the progressbar widget to show progress while copying the photos."""
         self.progressWidget = QtWidgets.QProgressBar(self)
         self.progressWidget.setEnabled(False)
         self.progressWidget.setVisible(False)
@@ -317,7 +292,7 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         print('taking photo')
 
     def importPhoto(self):
-        print('import photos')
+        """Import a selection of existing photos into the annotation dialog."""
         photoSelectionDialog = QtWidgets.QFileDialog(self)
         photoSelectionDialog.setWindowTitle(self.tr('Import photos'))
         photoSelectionDialog.setFileMode(
@@ -329,6 +304,13 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
             self.addPhotos(photoSelectionDialog.selectedFiles())
 
     def copyPhotos(self):
+        """Copy the photos from their current location into a location close to the project.
+
+        Returns
+        -------
+        str
+            Full system path of the location where the photos were saved.
+        """
         self.setEnabled(False)
         self.progressWidget.setEnabled(True)
         self.progressWidget.setVisible(True)
@@ -351,6 +333,15 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         return destFolder
 
     def accept(self, superAccept=True):
+        """Update the feature with the annotation text and other data values, and copy the photos.
+
+        When superAccept is True, accept the dialog too and close it.
+
+        Parameters
+        ----------
+        superAccept : bool, optional
+            When True, the dialog itself will be accepted and closed.
+        """
         photoPath = self.copyPhotos()
 
         self.layer.editBuffer().changeAttributeValues(

@@ -243,8 +243,8 @@ class AbstractAnnotator:
         layer = self.getLayer()
         self.disconnectFeatureAdded()
 
-        # layer.afterRollBack.disconnect(self.endAnnotate)
-        # layer.afterCommitChanges.disconnect(self.endAnnotate)
+        layer.afterRollBack.disconnect(self.endAnnotate)
+        layer.afterCommitChanges.disconnect(self.endAnnotate)
 
         if layer.isEditable():
             layer.endEditCommand()
