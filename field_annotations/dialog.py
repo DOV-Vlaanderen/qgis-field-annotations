@@ -287,15 +287,15 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
         photoButtonWidget.layout().addStretch()
 
-        takePhotoButton = QtWidgets.QToolButton(self)
-        takePhotoButton.setText(self.tr('&Take photo'))
-        takePhotoButton.setIcon(QtGui.QIcon(
-            ':/plugins/field_annotations/icons/take_photo.png'))
-        takePhotoButton.setIconSize(QtCore.QSize(32, 32))
-        takePhotoButton.setToolButtonStyle(
-            QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        takePhotoButton.clicked.connect(self.takePhoto)
-        photoButtonWidget.layout().addWidget(takePhotoButton)
+        # takePhotoButton = QtWidgets.QToolButton(self)
+        # takePhotoButton.setText(self.tr('&Take photo'))
+        # takePhotoButton.setIcon(QtGui.QIcon(
+        #     ':/plugins/field_annotations/icons/take_photo.png'))
+        # takePhotoButton.setIconSize(QtCore.QSize(32, 32))
+        # takePhotoButton.setToolButtonStyle(
+        #     QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        # takePhotoButton.clicked.connect(self.takePhoto)
+        # photoButtonWidget.layout().addWidget(takePhotoButton)
 
         importPhotoButton = QtWidgets.QToolButton(self)
         importPhotoButton.setText(self.tr('&Import photos'))
