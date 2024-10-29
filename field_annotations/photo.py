@@ -1,26 +1,24 @@
 from qgis.PyQt import QtWidgets, QtCore, QtGui
 
+from .translate import Translatable
+
 
 class QResizingPixmapLabel(QtWidgets.QLabel):
-    def __init__(self, parent):
+    def __init__(self, path, image=None, parent=None):
         super().__init__(parent)
+        self.path = path
+        self.image = image
+
         self.setMinimumSize(1, 1)
         self.setScaledContents(False)
         self._pixmap = None
 
-        self.softRemove = False
+        if self.image is None:
+            imageReader = QtGui.QImageReader(self.path)
+            imageReader.setAutoTransform(True)
+            self.image = imageReader.read()
 
-    def mouseDoubleClickEvent(self, event):
-        if self._pixmap is not None:
-            self.softRemove = not self.softRemove
-
-            effect = QtWidgets.QGraphicsOpacityEffect(self)
-            effect.setOpacity(0.3)
-
-            if self.softRemove:
-                self.setGraphicsEffect(effect)
-            else:
-                self.setGraphicsEffect(None)
+        self.setPixmap(QtGui.QPixmap.fromImage(self.image))
 
     def heightForWidth(self, width):
         if self._pixmap is None:
@@ -50,66 +48,82 @@ class QResizingPixmapLabel(QtWidgets.QLabel):
             super().setPixmap(self.scaledPixmap())
             self.setAlignment(QtCore.Qt.AlignCenter)
 
-class ImageDisplayWidget(QtWidgets.QLabel):
-    def __init__(self, parent, max_enlargement=2.0):
-        super().__init__(parent)
-        self.max_enlargement = max_enlargement
-        # self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-        #                    QtWidgets.QSizePolicy.Expanding)
-        self.setAlignment(QtCore.Qt.AlignCenter)
-        self.setMinimumSize(1, 1)
-        self.__image = None
 
-    def setImage(self, image):
-        self.__image = image
-        self.resize(self.sizeHint())
-        self.update()
+class QResizingPixmapPreviewLabel(QResizingPixmapLabel):
 
-    def sizeHint(self):
-        if self.__image is not None:
-            return self.__image.size() * self.max_enlargement
-        else:
-            return QtCore.QSize(1, 1)
-
-    def resizeEvent(self, event):
-        if self.__image is not None:
-            pixmap = QtGui.QPixmap.fromImage(self.__image)
-            scaled = pixmap.scaled(event.size(), QtCore.Qt.KeepAspectRatio)
-            self.setPixmap(scaled)
-        super().resizeEvent(event)
+    def mouseReleaseEvent(self, event):
+        dlg = PhotoPreviewDialog(self.path, parent=self)
+        if dlg.exec():
+            pass
 
 
-class PhotoAspectRatioLabel(QtWidgets.QLabel):
-    def __init__(self, parent):
-        super().__init__(parent)
+class QResizingPixmapCloseLabel(QResizingPixmapLabel):
 
-        self.pixmapWidth = 0
-        self.pixmapHeight = 0
+    def mouseReleaseEvent(self, event):
+        if self.parent() is not None:
+            self.parent().accept()
 
-    def setPixmap(self, pixmap):
-        self.pixmapWidth = pixmap.width()
-        self.pixmapHeight = pixmap.height()
 
-        self.updateMargins()
-        super().setPixmap(pixmap)
+class PhotoPreviewDialog(QtWidgets.QDialog, Translatable):
+    def __init__(self, photoPath, parent=None):
+        QtWidgets.QDialog.__init__(self, parent)
+        self.photoPath = photoPath
 
-    def resizeEvent(self, event):
-        self.updateMargins()
-        super().resizeEvent(event)
+        self.setWindowTitle(self.tr(u'Photo preview'))
+        self.setLayout(QtWidgets.QVBoxLayout())
 
-    def updateMargins(self):
-        if (self.pixmapWidth <= 0 or self.pixmapHeight <= 0):
-            return
+        self.addWidgets()
 
-        w = self.width()
-        h = self.height()
+    def addWidgets(self):
+        self.addPhotoWidget()
+        self.addButtonBoxWidget()
+        self.addShortcuts()
 
-        if (w <= 0 or h <= 0):
-            return
+    def addPhotoWidget(self):
+        photoLabel = QResizingPixmapCloseLabel(self.photoPath, parent=self)
+        self.layout().addWidget(photoLabel)
 
-        if (w * self.pixmapHeight > h * self.pixmapWidth):
-            m = int((w - (self.pixmapWidth * h / self.pixmapHeight)) / 2)
-            self.setContentsMargins(m, 0, m, 0)
-        else:
-            m = int((h - (self.pixmapHeight * w / self.pixmapWidth)) / 2)
-            self.setContentsMargins(0, m, 0, m)
+    def addButtonBoxWidget(self):
+        buttonBox = QtWidgets.QDialogButtonBox(self)
+        buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
+
+        deleteButton = QtWidgets.QToolButton(self)
+        deleteButton.setText(self.tr('&Remove'))
+        deleteButton.setIcon(QtGui.QIcon(
+            ':/plugins/field_annotations/icons/cancel.png'))
+        deleteButton.setIconSize(QtCore.QSize(32, 32))
+        deleteButton.setToolButtonStyle(
+            QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        deleteButton.clicked.connect(self.reject)
+
+        self.okButton = QtWidgets.QToolButton(self)
+        self.okButton.setText(self.tr('&Close'))
+        self.okButton.setIcon(QtGui.QIcon(
+            ':/plugins/field_annotations/icons/ok.png'))
+        self.okButton.setIconSize(QtCore.QSize(32, 32))
+        self.okButton.setToolButtonStyle(
+            QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.okButton.clicked.connect(self.accept)
+
+        buttonBox.addButton(
+            deleteButton, QtWidgets.QDialogButtonBox.ButtonRole.RejectRole)
+        buttonBox.addButton(
+            self.okButton, QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole)
+        self.layout().addWidget(buttonBox)
+
+    def addShortcuts(self):
+        self.okShortcutCtrlReturn = QtGui.QShortcut(self)
+        self.okShortcutCtrlReturn.setKey(QtGui.QKeySequence('Ctrl+Return'))
+        self.okShortcutCtrlReturn.activated.connect(self.accept)
+
+        self.okShortcutCtrlS = QtGui.QShortcut(self)
+        self.okShortcutCtrlS.setKey(QtGui.QKeySequence('Ctrl+S'))
+        self.okShortcutCtrlS.activated.connect(self.accept)
+
+        cancelShortcut = QtGui.QShortcut(self)
+        cancelShortcut.setKey(QtGui.QKeySequence('Ctrl+Q'))
+        cancelShortcut.activated.connect(self.destroy)
+
+    def reject(self):
+        self.parent().parent().removePhoto(self.photoPath)
+        super().reject()

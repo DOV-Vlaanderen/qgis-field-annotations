@@ -4,7 +4,7 @@ import math
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
 
-from .photo import PhotoAspectRatioLabel, ImageDisplayWidget, QResizingPixmapLabel
+from .photo import QResizingPixmapPreviewLabel
 
 from .translate import Translatable
 
@@ -118,8 +118,6 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         cancelShortcut.setKey(QtGui.QKeySequence('Ctrl+Q'))
         cancelShortcut.activated.connect(self.reject)
 
-        # self.adjustSize()
-
     def accept(self, superAccept=True):
         """Update the feature with the annotation text and other data values.
 
@@ -168,11 +166,13 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
 
 class PhotoWidget(QtWidgets.QWidget, Translatable):
+    photoListChanged = QtCore.pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
 
-        self.photoImages = []
+        self.photos = []
 
         layout = QtWidgets.QGridLayout()
         layout.setHorizontalSpacing(10)
@@ -190,6 +190,12 @@ class PhotoWidget(QtWidgets.QWidget, Translatable):
         # QtWidgets.QScroller.grabGesture(
         #     self.scrollWidget.viewport(), QtWidgets.QScroller.LeftMouseButtonGesture)
 
+    def removePhoto(self, photo):
+        keepPhotos = [p[0] for p in self.photos if p[0] != photo]
+        self.photos.clear()
+        self.addPhotos(keepPhotos)
+        self.photoListChanged.emit()
+
     def addPhotos(self, photos):
         for i in reversed(range(self.layout().count())):
             try:
@@ -201,16 +207,16 @@ class PhotoWidget(QtWidgets.QWidget, Translatable):
             imageReader = QtGui.QImageReader(photo)
             imageReader.setAutoTransform(True)
             photoImage = imageReader.read()
-            self.photoImages.append(photoImage)
+            self.photos.append((photo, photoImage))
 
-        size = math.ceil(math.sqrt(len(self.photoImages)))
+        size = math.ceil(math.sqrt(len(self.photos)))
         print(size)
         for i in range(size):
-            for ix, photoImage in enumerate(self.photoImages[(i*size): ((i*size)+size)]):
-                photoLabel = QResizingPixmapLabel(self)
+            for ix, photo in enumerate(self.photos[(i*size): ((i*size)+size)]):
+                photoLabel = QResizingPixmapPreviewLabel(
+                    photo[0], photo[1], self)
                 photoLabel.setSizePolicy(
                     QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
-                photoLabel.setPixmap(QtGui.QPixmap.fromImage(photoImage))
                 photoLabel.setMinimumSize(100, 100)
                 # photoLabel.adjustSize()
                 print('adding photo', i, ix, photoLabel)
@@ -218,6 +224,9 @@ class PhotoWidget(QtWidgets.QWidget, Translatable):
                     photoLabel, i, ix, QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.adjustSize()
+
+    def getPhotos(self):
+        return [p[0] for p in self.photos]
 
 
 class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
@@ -254,6 +263,10 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
     def addPhotos(self, photos):
         self.photosToAdd.extend(photos)
         self.photoWidget.addPhotos(photos)
+        self.photoListChanged.emit()
+
+    def updatePhotos(self):
+        self.photosToAdd = self.photoWidget.getPhotos()
         self.photoListChanged.emit()
 
     def addWidgets(self):
@@ -296,6 +309,7 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
     def addPhotoWidget(self):
         self.photoWidget = PhotoWidget(self)
+        self.photoWidget.photoListChanged.connect(self.updatePhotos)
         self.layout().addWidget(self.photoWidget)
 
     def takePhoto(self):
