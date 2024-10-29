@@ -39,6 +39,22 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
         self.addWidgets()
 
+    def getTranslationStrings(self):
+        """Get the translated strings.
+
+        Returns
+        -------
+        dict of <str, str>
+            String and their translated value.
+        """
+        return {
+            'Annotation': self.tr('Annotation'),
+            'For layer': self.tr('For layer'),
+            'No layer': self.tr('No layer'),
+            '&Cancel': self.tr('&Cancel'),
+            '&Ok': self.tr('&Ok')
+        }
+
     def addWidgets(self):
         """Add the necessary widgets to the dialog."""
         self.addAnnotationWidget()
@@ -48,7 +64,8 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
     def addAnnotationWidget(self):
         """Add the widget to write the annotation text."""
-        textEditLabel = QtWidgets.QLabel(self.tr('Annotation'))
+        textEditLabel = QtWidgets.QLabel(
+            self.getTranslationStrings().get('Annotation'))
         textEditLabelFont = textEditLabel.font()
         textEditLabelFont.setItalic(True)
         textEditLabel.setFont(textEditLabelFont)
@@ -62,7 +79,8 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
     def addLayerSelectorWidget(self):
         """Add the widget to select an annotatable layer."""
-        layerSelectorLabel = QtWidgets.QLabel(self.tr('For layer'))
+        layerSelectorLabel = QtWidgets.QLabel(
+            self.getTranslationStrings().get('For layer'))
         layerSelectorLabelFont = layerSelectorLabel.font()
         layerSelectorLabelFont.setItalic(True)
         layerSelectorLabel.setFont(layerSelectorLabelFont)
@@ -70,7 +88,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
         self.layerSelector = QtWidgets.QComboBox(self)
         self.layerSelector.addItem(QtGui.QIcon(
-            ':/plugins/field_annotations/icons/no_map.png'), self.tr('No layer'), None)
+            ':/plugins/field_annotations/icons/no_map.png'), self.getTranslationStrings().get('No layer'), None)
 
         for l in self.main.annotationView.listAnnotatableLayers():
             self.layerSelector.addItem(QtGui.QIcon(
@@ -83,7 +101,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
 
         cancelButton = QtWidgets.QToolButton(self)
-        cancelButton.setText(self.tr('&Cancel'))
+        cancelButton.setText(self.getTranslationStrings().get('&Cancel'))
         cancelButton.setIcon(QtGui.QIcon(
             ':/plugins/field_annotations/icons/cancel.png'))
         cancelButton.setIconSize(QtCore.QSize(32, 32))
@@ -92,7 +110,7 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         cancelButton.clicked.connect(self.reject)
 
         self.okButton = QtWidgets.QToolButton(self)
-        self.okButton.setText(self.tr('&Ok'))
+        self.okButton.setText(self.getTranslationStrings().get('&Ok'))
         self.okButton.setIcon(QtGui.QIcon(
             ':/plugins/field_annotations/icons/ok.png'))
         self.okButton.setIconSize(QtCore.QSize(32, 32))
@@ -233,6 +251,22 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         """Update the list of photos based on the photos returned from the photo widget."""
         self.photosToAdd = self.photoWidget.getPhotos()
         self.photoListChanged.emit()
+
+    def getTranslationStrings(self):
+        """Get the translated strings.
+
+        Returns
+        -------
+        dict of <str, str>
+            String and their translated value.
+        """
+        return {
+            'Annotation': self.tr('Annotation'),
+            'For layer': self.tr('For layer'),
+            'No layer': self.tr('No layer'),
+            '&Cancel': self.tr('&Cancel'),
+            '&Ok': self.tr('&Ok')
+        }
 
     def addWidgets(self):
         """Add the necessary widgets to the dialog and validate."""
