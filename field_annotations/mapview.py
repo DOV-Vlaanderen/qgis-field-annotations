@@ -3,7 +3,8 @@ from pathlib import Path
 
 from qgis.core import (
     QgsProject, QgsFillSymbol, QgsLineSymbol, QgsArrowSymbolLayer, QgsMarkerSymbol, Qgis, QgsPalLayerSettings,
-    QgsTextFormat, QgsTextBufferSettings, QgsVectorLayerSimpleLabeling, QgsSvgMarkerSymbolLayer, QgsEditorWidgetSetup)
+    QgsTextFormat, QgsTextBufferSettings, QgsVectorLayerSimpleLabeling, QgsSvgMarkerSymbolLayer, QgsEditorWidgetSetup,
+    QgsRuleBasedRenderer)
 from qgis.PyQt import QtGui
 
 from .annotate import AnnotationType, AnnotationViewMode
@@ -50,6 +51,26 @@ class AnnotationLayerStyler:
         layer.renderer().setSymbol(
             QgsFillSymbol.createSimple(props))
 
+        rootRule = QgsRuleBasedRenderer.Rule(
+            QgsFillSymbol.createSimple(props),
+            elseRule=True)
+
+        savedRule = QgsRuleBasedRenderer.Rule(
+            QgsFillSymbol.createSimple(props),
+            filterExp='@id >= 0')
+        rootRule.appendChild(savedRule)
+
+        props['color'] = '244,239,247,64'
+        props['outline_color'] = '184,144,207,255'
+
+        unsavedRule = QgsRuleBasedRenderer.Rule(
+            QgsFillSymbol.createSimple(props),
+            filterExp='@id < 0')
+        rootRule.appendChild(unsavedRule)
+
+        ruleRenderer = QgsRuleBasedRenderer(rootRule)
+        layer.setRenderer(ruleRenderer)
+
     @staticmethod
     def styleLineLayer(layer):
         """Style a line layer.
@@ -73,7 +94,36 @@ class AnnotationLayerStyler:
         props['outline_style'] = 'no'
         arrow.setSubSymbol(QgsFillSymbol.createSimple(props))
 
-        layer.renderer().setSymbol(lineSymbol)
+        rootRule = QgsRuleBasedRenderer.Rule(
+            lineSymbol,
+            elseRule=True)
+
+        savedRule = QgsRuleBasedRenderer.Rule(
+            lineSymbol,
+            filterExp='@id >= 0')
+        rootRule.appendChild(savedRule)
+
+        props = layer.renderer().symbol().symbolLayer(0).properties()
+        lineSymbol = QgsLineSymbol.createSimple(props)
+
+        arrow = QgsArrowSymbolLayer.create(
+            {'is_curved': '0', 'is_repeated': '1'})
+        lineSymbol.changeSymbolLayer(0, arrow)
+
+        props = arrow.subSymbol().symbolLayer(0).properties()
+        props['color'] = '244,239,247,64'
+        props['outline_color'] = '184,144,207,255'
+        props['outline_width'] = '0'
+        props['outline_style'] = 'no'
+        arrow.setSubSymbol(QgsFillSymbol.createSimple(props))
+
+        unsavedRule = QgsRuleBasedRenderer.Rule(
+            lineSymbol,
+            filterExp='@id < 0')
+        rootRule.appendChild(unsavedRule)
+
+        ruleRenderer = QgsRuleBasedRenderer(rootRule)
+        layer.setRenderer(ruleRenderer)
 
     @staticmethod
     def stylePointLayer(layer):
@@ -89,8 +139,27 @@ class AnnotationLayerStyler:
         props['outline_color'] = '112,68,134,255'
         props['size'] = '3.8'
         props['outline_width'] = '0.6'
-        layer.renderer().setSymbol(
-            QgsMarkerSymbol.createSimple(props))
+
+        rootRule = QgsRuleBasedRenderer.Rule(
+            QgsMarkerSymbol.createSimple(props),
+            elseRule=True)
+
+        savedRule = QgsRuleBasedRenderer.Rule(
+            QgsMarkerSymbol.createSimple(props),
+            filterExp='@id >= 0')
+        rootRule.appendChild(savedRule)
+
+        props['color'] = '244,239,247,64'
+        props['outline_color'] = '184,144,207,255'
+
+        unsavedRule = QgsRuleBasedRenderer.Rule(
+            QgsMarkerSymbol.createSimple(props),
+            filterExp='@id < 0')
+        rootRule.appendChild(unsavedRule)
+
+        ruleRenderer = QgsRuleBasedRenderer(rootRule)
+
+        layer.setRenderer(ruleRenderer)
 
     @staticmethod
     def stylePhotoLayer(layer):
@@ -118,7 +187,40 @@ class AnnotationLayerStyler:
         svgMarker = QgsSvgMarkerSymbolLayer.create(props)
         markerSymbol.changeSymbolLayer(0, svgMarker)
 
-        layer.renderer().setSymbol(markerSymbol)
+        rootRule = QgsRuleBasedRenderer.Rule(
+            markerSymbol,
+            elseRule=True)
+
+        savedRule = QgsRuleBasedRenderer.Rule(
+            markerSymbol,
+            filterExp='@id >= 0')
+        rootRule.appendChild(savedRule)
+
+        props = layer.renderer().symbol().symbolLayer(0).properties()
+        markerSymbol = QgsMarkerSymbol.createSimple(props)
+
+        icon_path = str(Path(__file__).parent.parent.joinpath(
+            'style_icons', 'camera.svg'))
+
+        svgMarker = QgsSvgMarkerSymbolLayer.create({'name': icon_path})
+
+        props = svgMarker.properties()
+        props['color'] = '200,185,208,64'
+        props['outline_color'] = '133,124,138,255'
+        props['size'] = '8'
+        props['outline_width'] = '0.1'
+
+        svgMarker = QgsSvgMarkerSymbolLayer.create(props)
+        markerSymbol.changeSymbolLayer(0, svgMarker)
+
+        unsavedRule = QgsRuleBasedRenderer.Rule(
+            markerSymbol,
+            filterExp='@id < 0')
+        rootRule.appendChild(unsavedRule)
+
+        ruleRenderer = QgsRuleBasedRenderer(rootRule)
+
+        layer.setRenderer(ruleRenderer)
 
         editorConfig = QgsEditorWidgetSetup('ExternalResource', {
             'FileWidget': True,
