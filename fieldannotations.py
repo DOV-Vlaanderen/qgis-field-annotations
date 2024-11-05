@@ -32,6 +32,7 @@ from .field_annotations.data import AnnotationDb
 from .field_annotations.mapview import AnnotationView
 from .field_annotations.toolbar import FieldAnnotationsToolbar
 from .field_annotations.translate import Translatable
+from .field_annotations.actions import ConfigurationDialogAction
 
 import os.path
 
@@ -65,6 +66,8 @@ class FieldAnnotations(Translatable):
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
 
+        self.pluginName = self.tr('Field annotations')
+
         # Declare instance attributes
         self.toolbar = None
 
@@ -73,10 +76,14 @@ class FieldAnnotations(Translatable):
         self.annotationDb = AnnotationDb(self)
         self.annotationView = AnnotationView(self)
 
+        self.configDialogAction = ConfigurationDialogAction(self)
+
     def initGui(self):
         """Create the toolbar."""
-        self.toolbar = self.iface.addToolBar(self.tr('Field annotations'))
+        self.toolbar = self.iface.addToolBar(self.pluginName)
         FieldAnnotationsToolbar(self.toolbar, self)
+
+        self.iface.addPluginToMenu(self.pluginName, self.configDialogAction)
 
     def unload(self):
         """Called when disabling the plugin or exiting QGIS.
@@ -84,3 +91,4 @@ class FieldAnnotations(Translatable):
         Remove the toolbar and close the dialog.
         """
         self.toolbar.parentWidget().removeToolBar(self.toolbar)
+        self.iface.removePluginMenu(self.pluginName, self.configDialogAction)

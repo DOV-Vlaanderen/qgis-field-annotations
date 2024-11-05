@@ -4,6 +4,7 @@ from qgis.core import QgsProject
 from .annotate import (AnnotationViewMode, PhotoAnnotator, PolygonAnnotator,
                        PointAnnotator, LineAnnotator, AnnotationErrorType)
 from .translate import Translatable
+from .config import ConfigDialog
 
 
 class AbstractToolbarButton(QtWidgets.QToolButton):
@@ -301,3 +302,22 @@ class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
         of visible layers only.
         """
         self.main.annotationState.toggleAnnotationViewMode()
+
+
+class ConfigurationDialogAction(QtWidgets.QAction, Translatable):
+    def __init__(self, main):
+        self.main = main
+
+        QtWidgets.QAction.__init__(
+            self, self.main.iface.mainWindow())
+
+        Translatable.__init__(self)
+
+        self.setText(self.tr('Settings'))
+
+        self.dialog = ConfigDialog(self.main)
+
+        self.triggered.connect(self.activate)
+
+    def activate(self):
+        self.dialog.exec()

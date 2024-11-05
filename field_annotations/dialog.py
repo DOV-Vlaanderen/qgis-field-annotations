@@ -8,6 +8,7 @@ from qgis.core import QgsExpressionContextUtils
 
 from .translate import Translatable
 from .photo import PhotoWidget
+from .widgets import QLabelBold, QLabelItalic
 
 
 class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
@@ -64,11 +65,8 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
     def addAnnotationWidget(self):
         """Add the widget to write the annotation text."""
-        textEditLabel = QtWidgets.QLabel(
+        textEditLabel = QLabelItalic(
             self.getTranslationStrings().get('Annotation'))
-        textEditLabelFont = textEditLabel.font()
-        textEditLabelFont.setItalic(True)
-        textEditLabel.setFont(textEditLabelFont)
         self.layout().addWidget(textEditLabel)
 
         self.textEdit = QtWidgets.QTextEdit(self)
@@ -79,11 +77,8 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
     def addLayerSelectorWidget(self):
         """Add the widget to select an annotatable layer."""
-        layerSelectorLabel = QtWidgets.QLabel(
+        layerSelectorLabel = QLabelItalic(
             self.getTranslationStrings().get('For layer'))
-        layerSelectorLabelFont = layerSelectorLabel.font()
-        layerSelectorLabelFont.setItalic(True)
-        layerSelectorLabel.setFont(layerSelectorLabelFont)
         self.layout().addWidget(layerSelectorLabel)
 
         self.layerSelector = QtWidgets.QComboBox(self)
@@ -287,15 +282,16 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
         photoButtonWidget.layout().addStretch()
 
-        # takePhotoButton = QtWidgets.QToolButton(self)
-        # takePhotoButton.setText(self.tr('&Take photo'))
-        # takePhotoButton.setIcon(QtGui.QIcon(
-        #     ':/plugins/field_annotations/icons/take_photo.png'))
-        # takePhotoButton.setIconSize(QtCore.QSize(32, 32))
-        # takePhotoButton.setToolButtonStyle(
-        #     QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        # takePhotoButton.clicked.connect(self.takePhoto)
-        # photoButtonWidget.layout().addWidget(takePhotoButton)
+        if self.main.config.photoConfig.canTakePhotos():
+            takePhotoButton = QtWidgets.QToolButton(self)
+            takePhotoButton.setText(self.tr('&Take photo'))
+            takePhotoButton.setIcon(QtGui.QIcon(
+                ':/plugins/field_annotations/icons/take_photo.png'))
+            takePhotoButton.setIconSize(QtCore.QSize(32, 32))
+            takePhotoButton.setToolButtonStyle(
+                QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            takePhotoButton.clicked.connect(self.takePhoto)
+            photoButtonWidget.layout().addWidget(takePhotoButton)
 
         importPhotoButton = QtWidgets.QToolButton(self)
         importPhotoButton.setText(self.tr('&Import photos'))
@@ -353,7 +349,8 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.progressWidget.setValue(counter)
 
         annotationId = str(uuid.uuid4())
-        destFolder = os.path.join(self.main.config.photoPath, annotationId)
+        destFolder = os.path.join(
+            self.main.config.photoConfig.photoPath, annotationId)
 
         if not os.path.exists(destFolder):
             os.makedirs(destFolder)
