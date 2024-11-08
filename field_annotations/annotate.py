@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from enum import Enum
+import os
 from qgis.PyQt import QtCore
 
 from qgis.core import QgsWkbTypes, QgsEditFormConfig, QgsField
@@ -23,6 +25,12 @@ class AnnotationErrorType(Enum):
     AlreadyAnnotating = 1
     NoProject = 2
     NoLayers = 3
+
+
+@dataclass
+class ExpressionField:
+    expression: str
+    field: QgsField
 
 
 class AnnotationState(QtCore.QObject):
@@ -163,6 +171,9 @@ class AbstractAnnotator:
             QgsField('layerUri', QtCore.QVariant.String),
             QgsField('layerName', QtCore.QVariant.String)
         ]
+
+    def getExpressionFields(self):
+        return []
 
     def createAnnotation(self):
         """Create a new annotation."""
@@ -331,6 +342,16 @@ class PhotoAnnotator(AbstractAnnotator, Translatable):
         fields = super().getFields()
         fields.extend([
             QgsField('photoPath', QtCore.QVariant.String)
+        ])
+        return fields
+
+    def getExpressionFields(self):
+        fields = super().getExpressionFields()
+        fields.extend([
+            ExpressionField(expression=f" @project_folder + '{os.sep}' + photoPath ",
+                            field=(QgsField('photoPathAbsolute',
+                                   QtCore.QVariant.String))
+                            )
         ])
         return fields
 

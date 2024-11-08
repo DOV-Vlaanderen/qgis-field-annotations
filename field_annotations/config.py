@@ -108,8 +108,10 @@ class PhotoConfig:
         if len(basePath) > 0 and len(projectName) > 0:
             self.photoPath = os.path.join(
                 basePath, self.photoBasePath.format(projectName))
+            self.photoPathRelative = self.photoBasePath.format(projectName)
         else:
             self.photoPath = None
+            self.photoPathRelative = None
 
         settings = QgsSettings()
         self.photoPreset = settings.value(

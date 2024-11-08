@@ -93,7 +93,13 @@ class AnnotationDb:
                 createNewGpkgLayer(layerName, geometryType,
                                    fields, fileExists=True)
 
-        return QgsVectorLayer(f'{self.main.config.dbPath}|layername={layerName}', humanLayerName, "ogr")
+        layer = QgsVectorLayer(
+            f'{self.main.config.dbPath}|layername={layerName}', humanLayerName, "ogr")
+        for expressionField in annotator.getExpressionFields():
+            layer.addExpressionField(
+                expressionField.expression, expressionField.field)
+
+        return layer
 
     def isAnnotationLayer(self, layer):
         """Checks whether the given layer is an annotation layer.

@@ -366,6 +366,9 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         destFolder = os.path.join(
             self.main.config.photoConfig.photoPath, annotationId)
 
+        destFolderRelative = os.path.join(
+            self.main.config.photoConfig.photoPathRelative, annotationId)
+
         if not os.path.exists(destFolder):
             os.makedirs(destFolder)
 
@@ -375,7 +378,7 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
             counter += 1
             self.progressWidget.setValue(counter)
 
-        return destFolder
+        return destFolderRelative
 
     def reject(self):
         if self.timer is not None:
