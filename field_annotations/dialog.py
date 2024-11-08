@@ -2,6 +2,7 @@ import datetime
 import os
 import shutil
 import uuid
+import subprocess
 
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
@@ -202,6 +203,7 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
             Annotation feature that was drawn and will be added on accepting the dialog.
         """
         self.photosToAdd = []
+        self.timer = None
 
         super().__init__(main, layer, feature)
 
@@ -321,6 +323,18 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
     def takePhoto(self):
         print('taking photo')
 
+        def loadPhotos():
+            toAdd = [f for f in self.main.config.photoConfig.getPhotosSince(
+                photoAppStartedAt) if f not in self.photosToAdd]
+            self.addPhotos(toAdd)
+
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(loadPhotos)
+
+        photoAppStartedAt = datetime.datetime.now()
+        subprocess.Popen(self.main.config.photoConfig.photoAppCommand)
+        self.timer.start(1000)
+
     def importPhoto(self):
         """Import a selection of existing photos into the annotation dialog."""
         photoSelectionDialog = QtWidgets.QFileDialog(self)
@@ -363,6 +377,12 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
         return destFolder
 
+    def reject(self):
+        if self.timer is not None:
+            self.timer.stop()
+
+        super().reject()
+
     def accept(self, superAccept=True):
         """Update the feature with the annotation text and other data values, and copy the photos.
 
@@ -373,6 +393,9 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         superAccept : bool, optional
             When True, the dialog itself will be accepted and closed.
         """
+        if self.timer is not None:
+            self.timer.stop()
+
         photoPath = self.copyPhotos()
 
         self.layer.editBuffer().changeAttributeValues(

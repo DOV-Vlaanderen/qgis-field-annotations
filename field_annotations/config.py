@@ -122,6 +122,12 @@ class PhotoConfig:
     def canTakePhotos(self):
         return self.photoAppCommand is not None
 
+    def getPhotosSince(self, timestamp):
+        unixTimestamp = int(timestamp.timestamp())
+        for f in os.listdir(self.photoFileLocation):
+            if os.path.getmtime(os.path.join(self.photoFileLocation, f)) >= unixTimestamp:
+                yield os.path.join(self.photoFileLocation, f)
+
     def _stripValue(self, value):
         value = value.strip()
         return value if value != '' else None
