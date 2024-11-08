@@ -52,10 +52,10 @@ class Config(QtCore.QObject, Translatable):
         self.photoConfig.populate(basePath, projectName)
 
 
-class PhotoConfigPresetWindows10:
+class PhotoConfigPresetWindows10(Translatable):
 
-    # self.photoFileFilter = re.compile(
-    #     r'^WIN_([0-9]{8}_[0-9]{2}_[0-9]{2}_[0-9]{2}).*\.jpg$')
+    def getName(self):
+        return self.tr('Windows 10')
 
     @staticmethod
     def isEnabled():
@@ -73,7 +73,10 @@ class PhotoConfigPresetWindows10:
             return os.path.join(os.environ['USERPROFILE'], 'Pictures', 'Camera Roll')
 
 
-class PhotoConfigPresetLinuxCheese:
+class PhotoConfigPresetLinuxCheese(Translatable):
+
+    def getName(self):
+        return self.tr('Linux')
 
     @staticmethod
     def isEnabled():
@@ -89,13 +92,31 @@ class PhotoConfigPresetLinuxCheese:
             return os.path.join(os.environ['HOME'], 'Pictures', 'Webcam')
 
 
+class PhotoConfigPresetCustom(Translatable):
+
+    def getName(self):
+        return self.tr('Custom')
+
+    @staticmethod
+    def isEnabled():
+        return True
+
+    @staticmethod
+    def getPhotoAppCommand():
+        return None
+
+    @staticmethod
+    def getPhotoFileLocation():
+        return None
+
+
 class PhotoConfig:
     def __init__(self, config):
         self.config = config
         self.photoBasePath = '{}-qgis-field-photos'
 
         self.photoPresets = {
-            'Custom': None,
+            'Custom': PhotoConfigPresetCustom,
             'Windows 10': PhotoConfigPresetWindows10,
             'Linux': PhotoConfigPresetLinuxCheese
         }
@@ -192,8 +213,8 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
         self.photoAppPresetCombobox = QtWidgets.QComboBox(self)
 
         for ix, preset in enumerate(self.photoConfig.photoPresets):
-            name = preset
-            clz = self.photoConfig.photoPresets[name]
+            clz = self.photoConfig.photoPresets[preset]
+            name = clz().getName()
 
             self.photoAppPresetCombobox.addItem(name, clz)
             if clz is None:
@@ -265,13 +286,17 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
 
     def updatePreset(self):
         currentPreset = self.photoAppPresetCombobox.currentData()
-        if currentPreset is None:
+
+        if currentPreset.getPhotoAppCommand() is None:
             self.photoAppCommandEdit.setEnabled(True)
-            self.photoFileLocationEdit.setReadOnly(False)
         else:
             self.photoAppCommandEdit.setEnabled(False)
             self.photoAppCommandEdit.setText(
                 currentPreset.getPhotoAppCommand())
+
+        if currentPreset.getPhotoFileLocation() is None:
+            self.photoFileLocationEdit.setReadOnly(False)
+        else:
             self.photoFileLocationEdit.setReadOnly(True)
             self.photoFileLocationEdit.setFilePath(
                 currentPreset.getPhotoFileLocation())
