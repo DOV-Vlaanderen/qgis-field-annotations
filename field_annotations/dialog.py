@@ -2,12 +2,14 @@ import datetime
 import os
 import shutil
 import uuid
+import subprocess
 
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
 
 from .translate import Translatable
 from .photo import PhotoWidget
+from .widgets import QLabelBold, QLabelItalic
 
 
 class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
@@ -64,11 +66,8 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
     def addAnnotationWidget(self):
         """Add the widget to write the annotation text."""
-        textEditLabel = QtWidgets.QLabel(
+        textEditLabel = QLabelItalic(
             self.getTranslationStrings().get('Annotation'))
-        textEditLabelFont = textEditLabel.font()
-        textEditLabelFont.setItalic(True)
-        textEditLabel.setFont(textEditLabelFont)
         self.layout().addWidget(textEditLabel)
 
         self.textEdit = QtWidgets.QTextEdit(self)
@@ -79,11 +78,8 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
 
     def addLayerSelectorWidget(self):
         """Add the widget to select an annotatable layer."""
-        layerSelectorLabel = QtWidgets.QLabel(
+        layerSelectorLabel = QLabelItalic(
             self.getTranslationStrings().get('For layer'))
-        layerSelectorLabelFont = layerSelectorLabel.font()
-        layerSelectorLabelFont.setItalic(True)
-        layerSelectorLabel.setFont(layerSelectorLabelFont)
         self.layout().addWidget(layerSelectorLabel)
 
         self.layerSelector = QtWidgets.QComboBox(self)
@@ -207,6 +203,7 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
             Annotation feature that was drawn and will be added on accepting the dialog.
         """
         self.photosToAdd = []
+        self.timer = None
 
         super().__init__(main, layer, feature)
 
@@ -287,15 +284,16 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
         photoButtonWidget.layout().addStretch()
 
-        # takePhotoButton = QtWidgets.QToolButton(self)
-        # takePhotoButton.setText(self.tr('&Take photo'))
-        # takePhotoButton.setIcon(QtGui.QIcon(
-        #     ':/plugins/field_annotations/icons/take_photo.png'))
-        # takePhotoButton.setIconSize(QtCore.QSize(32, 32))
-        # takePhotoButton.setToolButtonStyle(
-        #     QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        # takePhotoButton.clicked.connect(self.takePhoto)
-        # photoButtonWidget.layout().addWidget(takePhotoButton)
+        if self.main.config.photoConfig.canTakePhotos():
+            takePhotoButton = QtWidgets.QToolButton(self)
+            takePhotoButton.setText(self.tr('&Take photo'))
+            takePhotoButton.setIcon(QtGui.QIcon(
+                ':/plugins/field_annotations/icons/take_photo.png'))
+            takePhotoButton.setIconSize(QtCore.QSize(32, 32))
+            takePhotoButton.setToolButtonStyle(
+                QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            takePhotoButton.clicked.connect(self.takePhoto)
+            photoButtonWidget.layout().addWidget(takePhotoButton)
 
         importPhotoButton = QtWidgets.QToolButton(self)
         importPhotoButton.setText(self.tr('&Import photos'))
@@ -323,7 +321,20 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.layout().addWidget(self.progressWidget)
 
     def takePhoto(self):
-        print('taking photo')
+        """Take new photos with the configured photo application."""
+
+        def loadPhotos():
+            """Load new photos into the dialog."""
+            toAdd = [f for f in self.main.config.photoConfig.getPhotosSince(
+                photoAppStartedAt) if f not in self.photosToAdd]
+            self.addPhotos(toAdd)
+
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(loadPhotos)
+
+        photoAppStartedAt = datetime.datetime.now()
+        subprocess.Popen(self.main.config.photoConfig.photoAppCommand)
+        self.timer.start(1000)
 
     def importPhoto(self):
         """Import a selection of existing photos into the annotation dialog."""
@@ -353,7 +364,11 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.progressWidget.setValue(counter)
 
         annotationId = str(uuid.uuid4())
-        destFolder = os.path.join(self.main.config.photoPath, annotationId)
+        destFolder = os.path.join(
+            self.main.config.photoConfig.photoPath, annotationId)
+
+        destFolderRelative = os.path.join(
+            self.main.config.photoConfig.photoPathRelative, annotationId)
 
         if not os.path.exists(destFolder):
             os.makedirs(destFolder)
@@ -364,7 +379,14 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
             counter += 1
             self.progressWidget.setValue(counter)
 
-        return destFolder
+        return destFolderRelative
+
+    def reject(self):
+        """Called when dialog is cancelled. Stop the timer."""
+        if self.timer is not None:
+            self.timer.stop()
+
+        super().reject()
 
     def accept(self, superAccept=True):
         """Update the feature with the annotation text and other data values, and copy the photos.
@@ -376,6 +398,9 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         superAccept : bool, optional
             When True, the dialog itself will be accepted and closed.
         """
+        if self.timer is not None:
+            self.timer.stop()
+
         photoPath = self.copyPhotos()
 
         self.layer.editBuffer().changeAttributeValues(

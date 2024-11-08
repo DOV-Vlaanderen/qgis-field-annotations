@@ -228,7 +228,7 @@ class AnnotationLayerStyler:
             'UseLink': True
         })
         layer.setEditorWidgetSetup(
-            layer.fields().indexOf('photoPath'), editorConfig)
+            layer.fields().indexOf('photoPathAbsolute'), editorConfig)
 
     @staticmethod
     def styleLabels(layer, field='annotation'):
