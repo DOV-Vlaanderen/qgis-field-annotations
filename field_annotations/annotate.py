@@ -173,6 +173,7 @@ class AbstractAnnotator:
         ]
 
     def getExpressionFields(self):
+        """Get virtual expression fields for this annotation type (and layer)"""
         return []
 
     def createAnnotation(self):

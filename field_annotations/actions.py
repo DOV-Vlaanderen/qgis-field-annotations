@@ -306,6 +306,13 @@ class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
 
 class ConfigurationDialogAction(QtWidgets.QAction, Translatable):
     def __init__(self, main):
+        """Initialisation.
+
+        Parameters
+        ----------
+        main : FieldAnnotations
+            Reference to main plugin instance.
+        """
         self.main = main
 
         QtWidgets.QAction.__init__(
@@ -320,4 +327,5 @@ class ConfigurationDialogAction(QtWidgets.QAction, Translatable):
         self.triggered.connect(self.activate)
 
     def activate(self):
+        """Show the dialog when action is triggered."""
         self.dialog.exec()

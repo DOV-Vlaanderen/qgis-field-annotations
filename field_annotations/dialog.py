@@ -321,9 +321,10 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         self.layout().addWidget(self.progressWidget)
 
     def takePhoto(self):
-        print('taking photo')
+        """Take new photos with the configured photo application."""
 
         def loadPhotos():
+            """Load new photos into the dialog."""
             toAdd = [f for f in self.main.config.photoConfig.getPhotosSince(
                 photoAppStartedAt) if f not in self.photosToAdd]
             self.addPhotos(toAdd)
@@ -381,6 +382,7 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
         return destFolderRelative
 
     def reject(self):
+        """Called when dialog is cancelled. Stop the timer."""
         if self.timer is not None:
             self.timer.stop()
 

@@ -54,6 +54,10 @@ class Config(QtCore.QObject, Translatable):
 
 class PhotoConfigPresetWindows10(Translatable):
 
+    @staticmethod
+    def getKey():
+        return 'Windows10'
+
     def getName(self):
         return self.tr('Windows 10')
 
@@ -75,6 +79,10 @@ class PhotoConfigPresetWindows10(Translatable):
 
 class PhotoConfigPresetLinuxCheese(Translatable):
 
+    @staticmethod
+    def getKey():
+        return 'LinuxCheese'
+
     def getName(self):
         return self.tr('Linux')
 
@@ -94,6 +102,10 @@ class PhotoConfigPresetLinuxCheese(Translatable):
 
 class PhotoConfigPresetCustom(Translatable):
 
+    @staticmethod
+    def getKey():
+        return 'Custom'
+
     def getName(self):
         return self.tr('Custom')
 
@@ -112,20 +124,36 @@ class PhotoConfigPresetCustom(Translatable):
 
 class PhotoConfig:
     def __init__(self, config):
+        """Initialisation of photo configuration.
+
+        Parameters
+        ----------
+        config : Config
+            Main configuration instance.
+        """
         self.config = config
         self.photoBasePath = '{}-qgis-field-photos'
 
-        self.photoPresets = {
-            'Custom': PhotoConfigPresetCustom,
-            'Windows 10': PhotoConfigPresetWindows10,
-            'Linux': PhotoConfigPresetLinuxCheese
-        }
+        self.photoPresets = [
+            PhotoConfigPresetCustom,
+            PhotoConfigPresetLinuxCheese,
+            PhotoConfigPresetWindows10
+        ]
 
-        self.photoPreset = 'Custom'
+        self.photoPreset = PhotoConfigPresetCustom
         self.photoAppCommand = None
         self.photoFileLocation = None
 
     def populate(self, basePath, projectName):
+        """Populate the photo path based on the given input.
+
+        Parameters
+        ----------
+        basePath : str
+            Directory where the project is located
+        projectName : str
+            File name of the QGis project.
+        """
         if len(basePath) > 0 and len(projectName) > 0:
             self.photoPath = os.path.join(
                 basePath, self.photoBasePath.format(projectName))
@@ -135,36 +163,96 @@ class PhotoConfig:
             self.photoPathRelative = None
 
         settings = QgsSettings()
-        self.photoPreset = settings.value(
-            "fieldAnnotations/photo/preset", None)
+
+        self.photoPreset = None
+        presetKey = settings.value("fieldAnnotations/photo/preset", None)
+        if presetKey is not None:
+            photoPresets = [
+                p for p in self.photoPresets if p.getKey() == presetKey]
+            if len(photoPresets) > 0:
+                self.photoPreset = photoPresets[0]
+
         self.photoAppCommand = settings.value(
             "fieldAnnotations/photo/appCommand", None)
         self.photoFileLocation = settings.value(
             "fieldAnnotations/photo/fileLocation", None)
 
     def canTakePhotos(self):
+        """Whether taking photo's should be enabled.
+
+        Returns
+        -------
+        bool
+            True if we can take photo's, False otherwise.
+        """
         return self.photoAppCommand is not None
 
     def getPhotosSince(self, timestamp):
+        """Get all the photos that were modified in the photo file location directory since a given timestamp.
+
+        Parameters
+        ----------
+        timestamp : datetime.datetime
+            Timestamp to use for comparing against.
+
+        Yields
+        ------
+        str
+            Absolute path of files that were added.
+        """
         unixTimestamp = int(timestamp.timestamp())
         for f in os.listdir(self.photoFileLocation):
             if os.path.getmtime(os.path.join(self.photoFileLocation, f)) >= unixTimestamp:
                 yield os.path.join(self.photoFileLocation, f)
 
     def _stripValue(self, value):
+        """Strip the value and return None if empty.
+
+        Parameters
+        ----------
+        value : str
+            Value to strip.
+
+        Returns
+        -------
+        str or None
+            Stripped value if non-empty string, else None.
+        """
         value = value.strip()
         return value if value != '' else None
 
     def setPhotoAppCommand(self, value):
+        """Set the photo application command.
+
+        Parameters
+        ----------
+        value : str
+            Command or path of the photo application.
+        """
         self.photoAppCommand = self._stripValue(value)
 
     def setPhotoFileLocation(self, value):
+        """Set the photo file location.
+
+        Parameters
+        ----------
+        value : str
+            Absolute path to the location the photo's taken by the application will be stored.
+        """
         self.photoFileLocation = self._stripValue(value)
 
-    def setPhotoPreset(self, value):
-        self.photoPreset = self._stripValue(value)
+    def setPhotoPreset(self, preset):
+        """Set the photo preset to the given value.
+
+        Parameters
+        ----------
+        preset : PhotoConfigPreset
+            Photo config preset to use.
+        """
+        self.photoPreset = preset.getKey()
 
     def save(self):
+        """Save the settings."""
         settings = QgsSettings()
         settings.setValue("fieldAnnotations/photo/preset", self.photoPreset)
         settings.setValue("fieldAnnotations/photo/appCommand",
@@ -200,6 +288,7 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
         self.addButtonBoxWidget()
 
     def addPhotoSettingsWidgets(self):
+        """Add the photo settings widgets to the dialog."""
         label = QLabelBold(self.tr('Photo annotation settings'))
         labelFont = label.font()
         labelFont.setPointSize(12)
@@ -213,17 +302,12 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
         self.photoAppPresetCombobox = QtWidgets.QComboBox(self)
 
         for ix, preset in enumerate(self.photoConfig.photoPresets):
-            clz = self.photoConfig.photoPresets[preset]
-            name = clz().getName()
-
-            self.photoAppPresetCombobox.addItem(name, clz)
-            if clz is None:
-                self.photoAppPresetCombobox.model().item(ix, 0).setEnabled(True)
-            else:
-                self.photoAppPresetCombobox.model().item(ix, 0).setEnabled(clz.isEnabled())
+            name = preset().getName()
+            self.photoAppPresetCombobox.addItem(name, preset)
+            self.photoAppPresetCombobox.model().item(ix, 0).setEnabled(preset.isEnabled())
 
         self.photoAppPresetCombobox.currentIndexChanged.connect(
-            self.updatePreset)
+            self.updatePhotoPreset)
 
         self.layout().addWidget(self.photoAppPresetCombobox)
 
@@ -250,7 +334,7 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
 
         self.layout().addStretch()
 
-        presetIndex = self.photoAppPresetCombobox.findText(
+        presetIndex = self.photoAppPresetCombobox.findData(
             self.photoConfig.photoPreset)
         if presetIndex > -1:
             self.photoAppPresetCombobox.setCurrentIndex(presetIndex)
@@ -284,7 +368,8 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
             self.saveButton, QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole)
         self.layout().addWidget(buttonBox)
 
-    def updatePreset(self):
+    def updatePhotoPreset(self):
+        """Update the photo command and file location based on the selected preset."""
         currentPreset = self.photoAppPresetCombobox.currentData()
 
         if currentPreset.getPhotoAppCommand() is None:
@@ -302,8 +387,9 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
                 currentPreset.getPhotoFileLocation())
 
     def accept(self, *args):
+        """Save updated config and close the dialog."""
         self.photoConfig.setPhotoPreset(
-            self.photoAppPresetCombobox.currentText())
+            self.photoAppPresetCombobox.currentData())
         self.photoConfig.setPhotoAppCommand(self.photoAppCommandEdit.text())
         self.photoConfig.setPhotoFileLocation(
             self.photoFileLocationEdit.filePath())
