@@ -7,6 +7,8 @@ import subprocess
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
 
+
+from .config import PhotoConfig
 from .translate import Translatable
 from .photo import PhotoWidget
 from .widgets import QLabelBold, QLabelItalic
@@ -375,7 +377,10 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
         for photo in self.photosToAdd:
             destFile = os.path.join(destFolder, os.path.basename(photo))
-            shutil.copyfile(photo, destFile)
+            if self.main.config.photoConfig.photoSaveAction == PhotoConfig.PhotoSaveAction.Copy:
+                shutil.copyfile(photo, destFile)
+            elif self.main.config.photoConfig.photoSaveAction == PhotoConfig.PhotoSaveAction.Move:
+                shutil.move(photo, destFile)
             counter += 1
             self.progressWidget.setValue(counter)
 

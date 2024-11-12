@@ -1,6 +1,8 @@
 import os
 import re
 
+from enum import Enum
+
 from qgis.PyQt import QtCore, QtWidgets, QtGui
 from qgis.core import QgsProject, QgsSettings
 from qgis.gui import QgsFileWidget
@@ -59,7 +61,7 @@ class PhotoConfigPresetWindows10(Translatable):
         return 'Windows10'
 
     def getName(self):
-        return self.tr('Windows 10')
+        return self.tr('Windows Camera')
 
     @staticmethod
     def isEnabled():
@@ -84,11 +86,11 @@ class PhotoConfigPresetLinuxCheese(Translatable):
         return 'LinuxCheese'
 
     def getName(self):
-        return self.tr('Linux')
+        return self.tr('Cheese')
 
     @staticmethod
     def isEnabled():
-        return os.path.exists('/usr/bin/cheese')
+        return os.path.exists('/usr/bin/cheese') and 'HOME' in os.environ
 
     @staticmethod
     def getPhotoAppCommand():
@@ -123,6 +125,12 @@ class PhotoConfigPresetCustom(Translatable):
 
 
 class PhotoConfig:
+
+    class PhotoSaveAction(Enum):
+        Copy = "copy"
+        Move = "move"
+
+
     def __init__(self, config):
         """Initialisation of photo configuration.
 
@@ -143,6 +151,7 @@ class PhotoConfig:
         self.photoPreset = PhotoConfigPresetCustom
         self.photoAppCommand = None
         self.photoFileLocation = None
+        self.photoSaveAction = None
 
     def populate(self, basePath, projectName):
         """Populate the photo path based on the given input.
@@ -176,6 +185,8 @@ class PhotoConfig:
             "fieldAnnotations/photo/appCommand", None)
         self.photoFileLocation = settings.value(
             "fieldAnnotations/photo/fileLocation", None)
+        self.photoSaveAction = PhotoConfig.PhotoSaveAction(settings.value(
+            "fieldAnnotations/photo/saveAction", "copy"))
 
     def canTakePhotos(self):
         """Whether taking photo's should be enabled.
@@ -251,6 +262,12 @@ class PhotoConfig:
         """
         self.photoPreset = preset.getKey()
 
+    def setPhotoSaveAction(self, action):
+        if not isinstance(action, PhotoConfig.PhotoSaveAction):
+            raise ValueError
+
+        self.photoSaveAction = action
+
     def save(self):
         """Save the settings."""
         settings = QgsSettings()
@@ -259,6 +276,8 @@ class PhotoConfig:
                           self.photoAppCommand)
         settings.setValue("fieldAnnotations/photo/fileLocation",
                           self.photoFileLocation)
+        settings.setValue("fieldAnnotations/photo/saveAction",
+                          self.photoSaveAction.value)
 
 
 class ConfigDialog(QtWidgets.QDialog, Translatable):
@@ -332,12 +351,27 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
                 self.photoConfig.photoFileLocation)
         self.layout().addWidget(self.photoFileLocationEdit)
 
+        photoSaveActionLabel = QLabelItalic(self.tr('Photo save action'))
+        self.layout().addWidget(photoSaveActionLabel)
+
+        self.photoSaveActionCombobox = QtWidgets.QComboBox(self)
+        self.photoSaveActionCombobox.addItem(
+            self.tr('Copy'), PhotoConfig.PhotoSaveAction.Copy)
+        self.photoSaveActionCombobox.addItem(
+            self.tr('Move'), PhotoConfig.PhotoSaveAction.Move)
+        self.layout().addWidget(self.photoSaveActionCombobox)
+
         self.layout().addStretch()
 
         presetIndex = self.photoAppPresetCombobox.findData(
             self.photoConfig.photoPreset)
         if presetIndex > -1:
             self.photoAppPresetCombobox.setCurrentIndex(presetIndex)
+
+        saveActionIndex = self.photoSaveActionCombobox.findData(
+            self.photoConfig.photoSaveAction)
+        if saveActionIndex > -1:
+            self.photoSaveActionCombobox.setCurrentIndex(saveActionIndex)
 
     def addButtonBoxWidget(self):
         """Add the button box widget with the dialog's ok and cancel buttons."""
@@ -393,5 +427,7 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
         self.photoConfig.setPhotoAppCommand(self.photoAppCommandEdit.text())
         self.photoConfig.setPhotoFileLocation(
             self.photoFileLocationEdit.filePath())
+        self.photoConfig.setPhotoSaveAction(
+            self.photoSaveActionCombobox.currentData())
         self.photoConfig.save()
         super().accept()
