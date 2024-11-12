@@ -321,6 +321,8 @@ class ConfigurationDialogAction(QtWidgets.QAction, Translatable):
         Translatable.__init__(self)
 
         self.setText(self.tr('Settings'))
+        self.setIcon(QtGui.QIcon(
+            ':/plugins/field_annotations/icons/settings.png'))
 
         self.dialog = ConfigDialog(self.main)
 

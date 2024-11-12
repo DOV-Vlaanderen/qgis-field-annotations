@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="/plugins/field_annotations">
+    <file>icons/delete.png</file>
+    <file>icons/return.png</file>
+    <file>icons/save.png</file>
+    <file>icons/settings.png</file>
     <file>icons/map_notes.png</file>
     <file>icons/no_map.png</file>
     <file>icons/map.png</file>

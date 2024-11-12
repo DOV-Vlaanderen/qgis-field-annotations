@@ -7,6 +7,8 @@ import subprocess
 from qgis.PyQt import QtWidgets, QtGui, QtCore
 from qgis.core import QgsExpressionContextUtils
 
+
+from .config import PhotoConfig
 from .translate import Translatable
 from .photo import PhotoWidget
 from .widgets import QLabelBold, QLabelItalic
@@ -54,7 +56,8 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
             'For layer': self.tr('For layer'),
             'No layer': self.tr('No layer'),
             '&Cancel': self.tr('&Cancel'),
-            '&Ok': self.tr('&Ok')
+            '&Ok': self.tr('&Ok'),
+            '&Save': self.tr('&Save')
         }
 
     def addWidgets(self):
@@ -105,14 +108,24 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         cancelButton.clicked.connect(self.reject)
 
-        self.okButton = QtWidgets.QToolButton(self)
-        self.okButton.setText(self.getTranslationStrings().get('&Ok'))
-        self.okButton.setIcon(QtGui.QIcon(
-            ':/plugins/field_annotations/icons/ok.png'))
-        self.okButton.setIconSize(QtCore.QSize(32, 32))
-        self.okButton.setToolButtonStyle(
-            QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.okButton.clicked.connect(lambda: self.accept(True))
+        if self.main.config.autoSave:
+            self.okButton = QtWidgets.QToolButton(self)
+            self.okButton.setText(self.getTranslationStrings().get('&Save'))
+            self.okButton.setIcon(QtGui.QIcon(
+                ':/plugins/field_annotations/icons/save.png'))
+            self.okButton.setIconSize(QtCore.QSize(32, 32))
+            self.okButton.setToolButtonStyle(
+                QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            self.okButton.clicked.connect(self.acceptFinish)
+        else:
+            self.okButton = QtWidgets.QToolButton(self)
+            self.okButton.setText(self.getTranslationStrings().get('&Ok'))
+            self.okButton.setIcon(QtGui.QIcon(
+                ':/plugins/field_annotations/icons/ok.png'))
+            self.okButton.setIconSize(QtCore.QSize(32, 32))
+            self.okButton.setToolButtonStyle(
+                QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            self.okButton.clicked.connect(lambda: self.accept(True))
 
         buttonBox.addButton(
             cancelButton, QtWidgets.QDialogButtonBox.ButtonRole.RejectRole)
@@ -262,7 +275,8 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
             'For layer': self.tr('For layer'),
             'No layer': self.tr('No layer'),
             '&Cancel': self.tr('&Cancel'),
-            '&Ok': self.tr('&Ok')
+            '&Ok': self.tr('&Ok'),
+            '&Save': self.tr('&Save')
         }
 
     def addWidgets(self):
@@ -284,16 +298,21 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
         photoButtonWidget.layout().addStretch()
 
-        if self.main.config.photoConfig.canTakePhotos():
-            takePhotoButton = QtWidgets.QToolButton(self)
-            takePhotoButton.setText(self.tr('&Take photo'))
-            takePhotoButton.setIcon(QtGui.QIcon(
-                ':/plugins/field_annotations/icons/take_photo.png'))
-            takePhotoButton.setIconSize(QtCore.QSize(32, 32))
-            takePhotoButton.setToolButtonStyle(
-                QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-            takePhotoButton.clicked.connect(self.takePhoto)
-            photoButtonWidget.layout().addWidget(takePhotoButton)
+        takePhotoButton = QtWidgets.QToolButton(self)
+        takePhotoButton.setText(self.tr('&Take photo'))
+        takePhotoButton.setIcon(QtGui.QIcon(
+            ':/plugins/field_annotations/icons/take_photo.png'))
+        takePhotoButton.setIconSize(QtCore.QSize(32, 32))
+        takePhotoButton.setToolButtonStyle(
+            QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        takePhotoButton.clicked.connect(self.takePhoto)
+
+        if not self.main.config.photoConfig.canTakePhotos():
+            takePhotoButton.setEnabled(False)
+            takePhotoButton.setToolTip(
+                self.tr('Please configure camera application to use in plugin settings.'))
+
+        photoButtonWidget.layout().addWidget(takePhotoButton)
 
         importPhotoButton = QtWidgets.QToolButton(self)
         importPhotoButton.setText(self.tr('&Import photos'))
@@ -375,7 +394,10 @@ class NewPhotoAnnotationDialog(NewAnnotationDialog, Translatable):
 
         for photo in self.photosToAdd:
             destFile = os.path.join(destFolder, os.path.basename(photo))
-            shutil.copyfile(photo, destFile)
+            if self.main.config.photoConfig.photoSaveAction == PhotoConfig.PhotoSaveAction.Copy:
+                shutil.copyfile(photo, destFile)
+            elif self.main.config.photoConfig.photoSaveAction == PhotoConfig.PhotoSaveAction.Move:
+                shutil.move(photo, destFile)
             counter += 1
             self.progressWidget.setValue(counter)
 

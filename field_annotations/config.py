@@ -1,6 +1,8 @@
 import os
 import re
 
+from enum import Enum
+
 from qgis.PyQt import QtCore, QtWidgets, QtGui
 from qgis.core import QgsProject, QgsSettings
 from qgis.gui import QgsFileWidget
@@ -27,6 +29,8 @@ class Config(QtCore.QObject, Translatable):
         self.annotationFileName = '{}-qgis-field-annotations.gpkg'
         self.dbPath = None
 
+        self.autoSave = False
+
         self.photoConfig = PhotoConfig(self)
 
         self.connectPopulate()
@@ -42,6 +46,7 @@ class Config(QtCore.QObject, Translatable):
         """Set the database and photo paths according to project state."""
         basePath = QgsProject.instance().absolutePath()
         projectName = QgsProject.instance().baseName()
+        settings = QgsSettings()
 
         if len(basePath) > 0 and len(projectName) > 0:
             self.dbPath = os.path.join(
@@ -51,6 +56,27 @@ class Config(QtCore.QObject, Translatable):
 
         self.photoConfig.populate(basePath, projectName)
 
+        self.setAutoSave(settings.value(
+            "fieldAnnotations/autoSave", "false"))
+
+    def setAutoSave(self, autoSave):
+        """Set the autosave configuration.
+
+        Parameters
+        ----------
+        autoSave : bool or str ('true', 'false')
+            Whether to automatically save the annotations after creation.
+        """
+        if type(autoSave) == bool:
+            self.autoSave = autoSave
+        else:
+            self.autoSave = autoSave == "true"
+
+    def save(self):
+        """Save the settings."""
+        settings = QgsSettings()
+        settings.setValue("fieldAnnotations/autoSave",
+                          "true" if self.autoSave else "false")
 
 class PhotoConfigPresetWindows10(Translatable):
 
@@ -59,7 +85,7 @@ class PhotoConfigPresetWindows10(Translatable):
         return 'Windows10'
 
     def getName(self):
-        return self.tr('Windows 10')
+        return self.tr('Windows Camera')
 
     @staticmethod
     def isEnabled():
@@ -84,11 +110,11 @@ class PhotoConfigPresetLinuxCheese(Translatable):
         return 'LinuxCheese'
 
     def getName(self):
-        return self.tr('Linux')
+        return self.tr('Cheese')
 
     @staticmethod
     def isEnabled():
-        return os.path.exists('/usr/bin/cheese')
+        return os.path.exists('/usr/bin/cheese') and 'HOME' in os.environ
 
     @staticmethod
     def getPhotoAppCommand():
@@ -123,6 +149,12 @@ class PhotoConfigPresetCustom(Translatable):
 
 
 class PhotoConfig:
+
+    class PhotoSaveAction(Enum):
+        Copy = "copy"
+        Move = "move"
+
+
     def __init__(self, config):
         """Initialisation of photo configuration.
 
@@ -143,6 +175,7 @@ class PhotoConfig:
         self.photoPreset = PhotoConfigPresetCustom
         self.photoAppCommand = None
         self.photoFileLocation = None
+        self.photoSaveAction = None
 
     def populate(self, basePath, projectName):
         """Populate the photo path based on the given input.
@@ -176,6 +209,8 @@ class PhotoConfig:
             "fieldAnnotations/photo/appCommand", None)
         self.photoFileLocation = settings.value(
             "fieldAnnotations/photo/fileLocation", None)
+        self.photoSaveAction = PhotoConfig.PhotoSaveAction(settings.value(
+            "fieldAnnotations/photo/saveAction", "copy"))
 
     def canTakePhotos(self):
         """Whether taking photo's should be enabled.
@@ -251,6 +286,19 @@ class PhotoConfig:
         """
         self.photoPreset = preset.getKey()
 
+    def setPhotoSaveAction(self, action):
+        """Set the photo save action to the given value.
+
+        Parameters
+        ----------
+        action : PhotoConfig.PhotoSaveAction
+            Action to perform when saving a photo annotation.
+        """
+        if not isinstance(action, PhotoConfig.PhotoSaveAction):
+            raise ValueError
+
+        self.photoSaveAction = action
+
     def save(self):
         """Save the settings."""
         settings = QgsSettings()
@@ -259,6 +307,8 @@ class PhotoConfig:
                           self.photoAppCommand)
         settings.setValue("fieldAnnotations/photo/fileLocation",
                           self.photoFileLocation)
+        settings.setValue("fieldAnnotations/photo/saveAction",
+                          self.photoSaveAction.value)
 
 
 class ConfigDialog(QtWidgets.QDialog, Translatable):
@@ -273,6 +323,7 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
         QtWidgets.QDialog.__init__(self)
         self.main = main
 
+        self.config = self.main.config
         self.photoConfig = self.main.config.photoConfig
 
         self.setWindowTitle(self.tr(u'Field annotation settings'))
@@ -289,6 +340,18 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
 
     def addPhotoSettingsWidgets(self):
         """Add the photo settings widgets to the dialog."""
+        labelAnnotations = QLabelBold(self.tr('Annotation settings'))
+        labelAnnotationsFont = labelAnnotations.font()
+        labelAnnotationsFont.setPointSize(12)
+        labelAnnotations.setFont(labelAnnotationsFont)
+        self.layout().addWidget(labelAnnotations)
+
+        self.autoSaveCheckbox = QtWidgets.QCheckBox(self)
+        self.autoSaveCheckbox.setText(
+            self.tr('Autosave annotations after creation'))
+        self.autoSaveCheckbox.setChecked(self.config.autoSave)
+        self.layout().addWidget(self.autoSaveCheckbox)
+
         label = QLabelBold(self.tr('Photo annotation settings'))
         labelFont = label.font()
         labelFont.setPointSize(12)
@@ -332,12 +395,27 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
                 self.photoConfig.photoFileLocation)
         self.layout().addWidget(self.photoFileLocationEdit)
 
+        photoSaveActionLabel = QLabelItalic(self.tr('Photo save action'))
+        self.layout().addWidget(photoSaveActionLabel)
+
+        self.photoSaveActionCombobox = QtWidgets.QComboBox(self)
+        self.photoSaveActionCombobox.addItem(
+            self.tr('Copy'), PhotoConfig.PhotoSaveAction.Copy)
+        self.photoSaveActionCombobox.addItem(
+            self.tr('Move'), PhotoConfig.PhotoSaveAction.Move)
+        self.layout().addWidget(self.photoSaveActionCombobox)
+
         self.layout().addStretch()
 
         presetIndex = self.photoAppPresetCombobox.findData(
             self.photoConfig.photoPreset)
         if presetIndex > -1:
             self.photoAppPresetCombobox.setCurrentIndex(presetIndex)
+
+        saveActionIndex = self.photoSaveActionCombobox.findData(
+            self.photoConfig.photoSaveAction)
+        if saveActionIndex > -1:
+            self.photoSaveActionCombobox.setCurrentIndex(saveActionIndex)
 
     def addButtonBoxWidget(self):
         """Add the button box widget with the dialog's ok and cancel buttons."""
@@ -356,7 +434,7 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
         self.saveButton = QtWidgets.QToolButton(self)
         self.saveButton.setText(self.tr('&Save'))
         self.saveButton.setIcon(QtGui.QIcon(
-            ':/plugins/field_annotations/icons/ok.png'))
+            ':/plugins/field_annotations/icons/save.png'))
         self.saveButton.setIconSize(QtCore.QSize(32, 32))
         self.saveButton.setToolButtonStyle(
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
@@ -388,10 +466,15 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
 
     def accept(self, *args):
         """Save updated config and close the dialog."""
+        self.config.setAutoSave(self.autoSaveCheckbox.isChecked())
+        self.config.save()
+
         self.photoConfig.setPhotoPreset(
             self.photoAppPresetCombobox.currentData())
         self.photoConfig.setPhotoAppCommand(self.photoAppCommandEdit.text())
         self.photoConfig.setPhotoFileLocation(
             self.photoFileLocationEdit.filePath())
+        self.photoConfig.setPhotoSaveAction(
+            self.photoSaveActionCombobox.currentData())
         self.photoConfig.save()
         super().accept()
