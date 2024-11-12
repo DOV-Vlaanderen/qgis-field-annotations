@@ -282,7 +282,8 @@ class AnnotationView(Translatable):
         """
         self.main = main
 
-        self.re_subsetString = re.compile(r'\|subset=[^|]*')
+        self.re_subsetString = re.compile(
+            """\|subset=((([^|]|('[^']*|[^']*')|("[^"]*|"[^"]*))*))""")
 
         self.connectPopulate()
         self.populate()
