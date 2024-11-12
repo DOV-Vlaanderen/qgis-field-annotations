@@ -60,12 +60,20 @@ class Config(QtCore.QObject, Translatable):
             "fieldAnnotations/autoSave", "false"))
 
     def setAutoSave(self, autoSave):
+        """Set the autosave configuration.
+
+        Parameters
+        ----------
+        autoSave : bool or str ('true', 'false')
+            Whether to automatically save the annotations after creation.
+        """
         if type(autoSave) == bool:
             self.autoSave = autoSave
         else:
             self.autoSave = autoSave == "true"
 
     def save(self):
+        """Save the settings."""
         settings = QgsSettings()
         settings.setValue("fieldAnnotations/autoSave",
                           "true" if self.autoSave else "false")
@@ -279,6 +287,13 @@ class PhotoConfig:
         self.photoPreset = preset.getKey()
 
     def setPhotoSaveAction(self, action):
+        """Set the photo save action to the given value.
+
+        Parameters
+        ----------
+        action : PhotoConfig.PhotoSaveAction
+            Action to perform when saving a photo annotation.
+        """
         if not isinstance(action, PhotoConfig.PhotoSaveAction):
             raise ValueError
 

@@ -142,62 +142,62 @@
 <context>
     <name>ConfigDialog</name>
     <message>
-        <location filename="../field_annotations/config.py" line="314"/>
+        <location filename="../field_annotations/config.py" line="329"/>
         <source>Field annotation settings</source>
         <translation>Veldnotitie instellingen</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="340"/>
+        <location filename="../field_annotations/config.py" line="355"/>
         <source>Photo annotation settings</source>
         <translation>Fotonotitie instellingen</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="346"/>
+        <location filename="../field_annotations/config.py" line="361"/>
         <source>Photo application preset</source>
         <translation>Cameratoepassing voorkeuze</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="362"/>
+        <location filename="../field_annotations/config.py" line="377"/>
         <source>Photo application command</source>
         <translation>Cameratoepassing commando</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="371"/>
+        <location filename="../field_annotations/config.py" line="386"/>
         <source>Photo file location</source>
         <translation>Locatie fotobestanden</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="411"/>
+        <location filename="../field_annotations/config.py" line="426"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Annuleren</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="420"/>
+        <location filename="../field_annotations/config.py" line="435"/>
         <source>&amp;Save</source>
         <translation>&amp;Opslaan</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="383"/>
+        <location filename="../field_annotations/config.py" line="398"/>
         <source>Photo save action</source>
         <translation>Actie bij opslaan foto&apos;s</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="387"/>
+        <location filename="../field_annotations/config.py" line="402"/>
         <source>Copy</source>
         <translation>Kopiëren</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="389"/>
+        <location filename="../field_annotations/config.py" line="404"/>
         <source>Move</source>
         <translation>Verplaatsen</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="328"/>
+        <location filename="../field_annotations/config.py" line="343"/>
         <source>Annotation settings</source>
         <translation>Notitie instellingen</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="335"/>
+        <location filename="../field_annotations/config.py" line="350"/>
         <source>Autosave annotations after creation</source>
         <translation>Notities automatisch opslaan na het aanmaken</translation>
     </message>
@@ -277,17 +277,17 @@
         <translation>&amp;Neem foto</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="312"/>
+        <location filename="../field_annotations/dialog.py" line="318"/>
         <source>&amp;Import photos</source>
         <translation>&amp;Importeer foto&apos;s</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="355"/>
+        <location filename="../field_annotations/dialog.py" line="361"/>
         <source>Import photos</source>
         <translation>Importeer foto&apos;s</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="358"/>
+        <location filename="../field_annotations/dialog.py" line="364"/>
         <source>Images (*.jpg *.jpeg *.png *.JPG *.JPEG *.PNG)</source>
         <translation>Afbeeldingen (*.jpg *.jpeg *.png *.JPG *.JPEG *.PNG)</translation>
     </message>
@@ -316,6 +316,16 @@
         <source>&amp;Ok</source>
         <translation>&amp;Ok</translation>
     </message>
+    <message>
+        <location filename="../field_annotations/dialog.py" line="279"/>
+        <source>&amp;Save</source>
+        <translation>&amp;Opslaan</translation>
+    </message>
+    <message>
+        <location filename="../field_annotations/dialog.py" line="312"/>
+        <source>Please configure camera application to use in plugin settings.</source>
+        <translation>Stel eerst een cameratoepassing in in de plugin instellingen.</translation>
+    </message>
 </context>
 <context>
     <name>PhotoAnnotator</name>
@@ -328,7 +338,7 @@
 <context>
     <name>PhotoConfigPresetCustom</name>
     <message>
-        <location filename="../field_annotations/config.py" line="128"/>
+        <location filename="../field_annotations/config.py" line="136"/>
         <source>Custom</source>
         <translation>Aangepast</translation>
     </message>
@@ -341,7 +351,7 @@
         <translation type="obsolete">Linux</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="105"/>
+        <location filename="../field_annotations/config.py" line="113"/>
         <source>Cheese</source>
         <translation>Cheese</translation>
     </message>
@@ -354,7 +364,7 @@
         <translation type="obsolete">Windows 10</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="80"/>
+        <location filename="../field_annotations/config.py" line="88"/>
         <source>Windows Camera</source>
         <translation>Windows Camera</translation>
     </message>
