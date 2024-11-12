@@ -356,7 +356,7 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
         self.saveButton = QtWidgets.QToolButton(self)
         self.saveButton.setText(self.tr('&Save'))
         self.saveButton.setIcon(QtGui.QIcon(
-            ':/plugins/field_annotations/icons/ok.png'))
+            ':/plugins/field_annotations/icons/save.png'))
         self.saveButton.setIconSize(QtCore.QSize(32, 32))
         self.saveButton.setToolButtonStyle(
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)

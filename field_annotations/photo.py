@@ -238,7 +238,7 @@ class PhotoPreviewDialog(QtWidgets.QDialog, Translatable):
         deleteButton = QtWidgets.QToolButton(self)
         deleteButton.setText(self.tr('&Remove'))
         deleteButton.setIcon(QtGui.QIcon(
-            ':/plugins/field_annotations/icons/cancel.png'))
+            ':/plugins/field_annotations/icons/delete.png'))
         deleteButton.setIconSize(QtCore.QSize(32, 32))
         deleteButton.setToolButtonStyle(
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
@@ -247,7 +247,7 @@ class PhotoPreviewDialog(QtWidgets.QDialog, Translatable):
         self.okButton = QtWidgets.QToolButton(self)
         self.okButton.setText(self.tr('&Close'))
         self.okButton.setIcon(QtGui.QIcon(
-            ':/plugins/field_annotations/icons/ok.png'))
+            ':/plugins/field_annotations/icons/cancel.png'))
         self.okButton.setIconSize(QtCore.QSize(32, 32))
         self.okButton.setToolButtonStyle(
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
