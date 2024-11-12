@@ -29,6 +29,8 @@ class Config(QtCore.QObject, Translatable):
         self.annotationFileName = '{}-qgis-field-annotations.gpkg'
         self.dbPath = None
 
+        self.autoSave = False
+
         self.photoConfig = PhotoConfig(self)
 
         self.connectPopulate()
@@ -44,6 +46,7 @@ class Config(QtCore.QObject, Translatable):
         """Set the database and photo paths according to project state."""
         basePath = QgsProject.instance().absolutePath()
         projectName = QgsProject.instance().baseName()
+        settings = QgsSettings()
 
         if len(basePath) > 0 and len(projectName) > 0:
             self.dbPath = os.path.join(
@@ -53,6 +56,19 @@ class Config(QtCore.QObject, Translatable):
 
         self.photoConfig.populate(basePath, projectName)
 
+        self.setAutoSave(settings.value(
+            "fieldAnnotations/autoSave", "false"))
+
+    def setAutoSave(self, autoSave):
+        if type(autoSave) == bool:
+            self.autoSave = autoSave
+        else:
+            self.autoSave = autoSave == "true"
+
+    def save(self):
+        settings = QgsSettings()
+        settings.setValue("fieldAnnotations/autoSave",
+                          "true" if self.autoSave else "false")
 
 class PhotoConfigPresetWindows10(Translatable):
 
@@ -292,6 +308,7 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
         QtWidgets.QDialog.__init__(self)
         self.main = main
 
+        self.config = self.main.config
         self.photoConfig = self.main.config.photoConfig
 
         self.setWindowTitle(self.tr(u'Field annotation settings'))
@@ -308,6 +325,18 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
 
     def addPhotoSettingsWidgets(self):
         """Add the photo settings widgets to the dialog."""
+        labelAnnotations = QLabelBold(self.tr('Annotation settings'))
+        labelAnnotationsFont = labelAnnotations.font()
+        labelAnnotationsFont.setPointSize(12)
+        labelAnnotations.setFont(labelAnnotationsFont)
+        self.layout().addWidget(labelAnnotations)
+
+        self.autoSaveCheckbox = QtWidgets.QCheckBox(self)
+        self.autoSaveCheckbox.setText(
+            self.tr('Autosave annotations after creation'))
+        self.autoSaveCheckbox.setChecked(self.config.autoSave)
+        self.layout().addWidget(self.autoSaveCheckbox)
+
         label = QLabelBold(self.tr('Photo annotation settings'))
         labelFont = label.font()
         labelFont.setPointSize(12)
@@ -422,6 +451,9 @@ class ConfigDialog(QtWidgets.QDialog, Translatable):
 
     def accept(self, *args):
         """Save updated config and close the dialog."""
+        self.config.setAutoSave(self.autoSaveCheckbox.isChecked())
+        self.config.save()
+
         self.photoConfig.setPhotoPreset(
             self.photoAppPresetCombobox.currentData())
         self.photoConfig.setPhotoAppCommand(self.photoAppCommandEdit.text())

@@ -142,54 +142,64 @@
 <context>
     <name>ConfigDialog</name>
     <message>
-        <location filename="../field_annotations/config.py" line="297"/>
+        <location filename="../field_annotations/config.py" line="314"/>
         <source>Field annotation settings</source>
         <translation>Veldnotitie instellingen</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="311"/>
+        <location filename="../field_annotations/config.py" line="340"/>
         <source>Photo annotation settings</source>
         <translation>Fotonotitie instellingen</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="317"/>
+        <location filename="../field_annotations/config.py" line="346"/>
         <source>Photo application preset</source>
-        <translation>Fototoepassing voorkeuze</translation>
+        <translation>Cameratoepassing voorkeuze</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="333"/>
+        <location filename="../field_annotations/config.py" line="362"/>
         <source>Photo application command</source>
-        <translation>Fototoepassing commando</translation>
+        <translation>Cameratoepassing commando</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="342"/>
+        <location filename="../field_annotations/config.py" line="371"/>
         <source>Photo file location</source>
         <translation>Locatie fotobestanden</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="382"/>
+        <location filename="../field_annotations/config.py" line="411"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Annuleren</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="391"/>
+        <location filename="../field_annotations/config.py" line="420"/>
         <source>&amp;Save</source>
         <translation>&amp;Opslaan</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="354"/>
+        <location filename="../field_annotations/config.py" line="383"/>
         <source>Photo save action</source>
         <translation>Actie bij opslaan foto&apos;s</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="358"/>
+        <location filename="../field_annotations/config.py" line="387"/>
         <source>Copy</source>
         <translation>Kopiëren</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="360"/>
+        <location filename="../field_annotations/config.py" line="389"/>
         <source>Move</source>
         <translation>Verplaatsen</translation>
+    </message>
+    <message>
+        <location filename="../field_annotations/config.py" line="328"/>
+        <source>Annotation settings</source>
+        <translation>Notitie instellingen</translation>
+    </message>
+    <message>
+        <location filename="../field_annotations/config.py" line="335"/>
+        <source>Autosave annotations after creation</source>
+        <translation>Notities automatisch opslaan na het aanmaken</translation>
     </message>
 </context>
 <context>
@@ -248,56 +258,61 @@
         <source>No layer</source>
         <translation>Geen laag</translation>
     </message>
+    <message>
+        <location filename="../field_annotations/dialog.py" line="60"/>
+        <source>&amp;Save</source>
+        <translation>&amp;Opslaan</translation>
+    </message>
 </context>
 <context>
     <name>NewPhotoAnnotationDialog</name>
     <message>
-        <location filename="../field_annotations/dialog.py" line="212"/>
+        <location filename="../field_annotations/dialog.py" line="223"/>
         <source>New photo annotation</source>
         <translation>Nieuwe fotonotitie</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="291"/>
+        <location filename="../field_annotations/dialog.py" line="302"/>
         <source>&amp;Take photo</source>
         <translation>&amp;Neem foto</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="301"/>
+        <location filename="../field_annotations/dialog.py" line="312"/>
         <source>&amp;Import photos</source>
         <translation>&amp;Importeer foto&apos;s</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="344"/>
+        <location filename="../field_annotations/dialog.py" line="355"/>
         <source>Import photos</source>
         <translation>Importeer foto&apos;s</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="347"/>
+        <location filename="../field_annotations/dialog.py" line="358"/>
         <source>Images (*.jpg *.jpeg *.png *.JPG *.JPEG *.PNG)</source>
         <translation>Afbeeldingen (*.jpg *.jpeg *.png *.JPG *.JPEG *.PNG)</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="263"/>
+        <location filename="../field_annotations/dialog.py" line="274"/>
         <source>Annotation</source>
         <translation>Notitie</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="264"/>
+        <location filename="../field_annotations/dialog.py" line="275"/>
         <source>For layer</source>
         <translation>Voor laag</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="265"/>
+        <location filename="../field_annotations/dialog.py" line="276"/>
         <source>No layer</source>
         <translation>Geen laag</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="266"/>
+        <location filename="../field_annotations/dialog.py" line="277"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Annuleren</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="267"/>
+        <location filename="../field_annotations/dialog.py" line="278"/>
         <source>&amp;Ok</source>
         <translation>&amp;Ok</translation>
     </message>
@@ -313,7 +328,7 @@
 <context>
     <name>PhotoConfigPresetCustom</name>
     <message>
-        <location filename="../field_annotations/config.py" line="112"/>
+        <location filename="../field_annotations/config.py" line="128"/>
         <source>Custom</source>
         <translation>Aangepast</translation>
     </message>
@@ -326,7 +341,7 @@
         <translation type="obsolete">Linux</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="89"/>
+        <location filename="../field_annotations/config.py" line="105"/>
         <source>Cheese</source>
         <translation>Cheese</translation>
     </message>
@@ -339,7 +354,7 @@
         <translation type="obsolete">Windows 10</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="64"/>
+        <location filename="../field_annotations/config.py" line="80"/>
         <source>Windows Camera</source>
         <translation>Windows Camera</translation>
     </message>

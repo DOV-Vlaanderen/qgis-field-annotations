@@ -142,54 +142,64 @@
 <context>
     <name>ConfigDialog</name>
     <message>
-        <location filename="../field_annotations/config.py" line="297"/>
+        <location filename="../field_annotations/config.py" line="314"/>
         <source>Field annotation settings</source>
         <translation>Field annotation settings</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="311"/>
+        <location filename="../field_annotations/config.py" line="340"/>
         <source>Photo annotation settings</source>
         <translation>Photo annotation settings</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="317"/>
+        <location filename="../field_annotations/config.py" line="346"/>
         <source>Photo application preset</source>
-        <translation>Photo application preset</translation>
+        <translation>Camera application preset</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="333"/>
+        <location filename="../field_annotations/config.py" line="362"/>
         <source>Photo application command</source>
-        <translation>Photo application command</translation>
+        <translation>Camera application command</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="342"/>
+        <location filename="../field_annotations/config.py" line="371"/>
         <source>Photo file location</source>
         <translation>Photo file location</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="382"/>
+        <location filename="../field_annotations/config.py" line="411"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="391"/>
+        <location filename="../field_annotations/config.py" line="420"/>
         <source>&amp;Save</source>
         <translation>&amp;Save</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="354"/>
+        <location filename="../field_annotations/config.py" line="383"/>
         <source>Photo save action</source>
         <translation>Photo save action</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="358"/>
+        <location filename="../field_annotations/config.py" line="387"/>
         <source>Copy</source>
         <translation>Copy</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="360"/>
+        <location filename="../field_annotations/config.py" line="389"/>
         <source>Move</source>
         <translation>Move</translation>
+    </message>
+    <message>
+        <location filename="../field_annotations/config.py" line="328"/>
+        <source>Annotation settings</source>
+        <translation>Annotation settings</translation>
+    </message>
+    <message>
+        <location filename="../field_annotations/config.py" line="335"/>
+        <source>Autosave annotations after creation</source>
+        <translation>Autosave annotations after creation</translation>
     </message>
 </context>
 <context>
@@ -248,56 +258,61 @@
         <source>No layer</source>
         <translation>No layer</translation>
     </message>
+    <message>
+        <location filename="../field_annotations/dialog.py" line="60"/>
+        <source>&amp;Save</source>
+        <translation>&amp;Save</translation>
+    </message>
 </context>
 <context>
     <name>NewPhotoAnnotationDialog</name>
     <message>
-        <location filename="../field_annotations/dialog.py" line="212"/>
+        <location filename="../field_annotations/dialog.py" line="223"/>
         <source>New photo annotation</source>
         <translation>New photo annotation</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="291"/>
+        <location filename="../field_annotations/dialog.py" line="302"/>
         <source>&amp;Take photo</source>
         <translation>&amp;Take photo</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="301"/>
+        <location filename="../field_annotations/dialog.py" line="312"/>
         <source>&amp;Import photos</source>
         <translation>&amp;Import photos</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="344"/>
+        <location filename="../field_annotations/dialog.py" line="355"/>
         <source>Import photos</source>
         <translation>Import photos</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="347"/>
+        <location filename="../field_annotations/dialog.py" line="358"/>
         <source>Images (*.jpg *.jpeg *.png *.JPG *.JPEG *.PNG)</source>
         <translation>Images (*.jpg *.jpeg *.png *.JPG *.JPEG *.PNG)</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="263"/>
+        <location filename="../field_annotations/dialog.py" line="274"/>
         <source>Annotation</source>
         <translation>Annotation</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="264"/>
+        <location filename="../field_annotations/dialog.py" line="275"/>
         <source>For layer</source>
         <translation>For layer</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="265"/>
+        <location filename="../field_annotations/dialog.py" line="276"/>
         <source>No layer</source>
         <translation>No layer</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="266"/>
+        <location filename="../field_annotations/dialog.py" line="277"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../field_annotations/dialog.py" line="267"/>
+        <location filename="../field_annotations/dialog.py" line="278"/>
         <source>&amp;Ok</source>
         <translation>&amp;Ok</translation>
     </message>
@@ -313,7 +328,7 @@
 <context>
     <name>PhotoConfigPresetCustom</name>
     <message>
-        <location filename="../field_annotations/config.py" line="112"/>
+        <location filename="../field_annotations/config.py" line="128"/>
         <source>Custom</source>
         <translation>Custom</translation>
     </message>
@@ -326,7 +341,7 @@
         <translation type="obsolete">Linux</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="89"/>
+        <location filename="../field_annotations/config.py" line="105"/>
         <source>Cheese</source>
         <translation>Cheese</translation>
     </message>
@@ -339,7 +354,7 @@
         <translation type="obsolete">Windows 10</translation>
     </message>
     <message>
-        <location filename="../field_annotations/config.py" line="64"/>
+        <location filename="../field_annotations/config.py" line="80"/>
         <source>Windows Camera</source>
         <translation>Windows Camera</translation>
     </message>

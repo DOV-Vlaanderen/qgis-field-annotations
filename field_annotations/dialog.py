@@ -56,7 +56,8 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
             'For layer': self.tr('For layer'),
             'No layer': self.tr('No layer'),
             '&Cancel': self.tr('&Cancel'),
-            '&Ok': self.tr('&Ok')
+            '&Ok': self.tr('&Ok'),
+            '&Save': self.tr('&Save')
         }
 
     def addWidgets(self):
@@ -107,14 +108,24 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
             QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         cancelButton.clicked.connect(self.reject)
 
-        self.okButton = QtWidgets.QToolButton(self)
-        self.okButton.setText(self.getTranslationStrings().get('&Ok'))
-        self.okButton.setIcon(QtGui.QIcon(
-            ':/plugins/field_annotations/icons/ok.png'))
-        self.okButton.setIconSize(QtCore.QSize(32, 32))
-        self.okButton.setToolButtonStyle(
-            QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.okButton.clicked.connect(lambda: self.accept(True))
+        if self.main.config.autoSave:
+            self.okButton = QtWidgets.QToolButton(self)
+            self.okButton.setText(self.getTranslationStrings().get('&Save'))
+            self.okButton.setIcon(QtGui.QIcon(
+                ':/plugins/field_annotations/icons/save.png'))
+            self.okButton.setIconSize(QtCore.QSize(32, 32))
+            self.okButton.setToolButtonStyle(
+                QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            self.okButton.clicked.connect(self.acceptFinish)
+        else:
+            self.okButton = QtWidgets.QToolButton(self)
+            self.okButton.setText(self.getTranslationStrings().get('&Ok'))
+            self.okButton.setIcon(QtGui.QIcon(
+                ':/plugins/field_annotations/icons/ok.png'))
+            self.okButton.setIconSize(QtCore.QSize(32, 32))
+            self.okButton.setToolButtonStyle(
+                QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            self.okButton.clicked.connect(lambda: self.accept(True))
 
         buttonBox.addButton(
             cancelButton, QtWidgets.QDialogButtonBox.ButtonRole.RejectRole)
