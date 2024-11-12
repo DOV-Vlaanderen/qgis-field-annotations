@@ -134,7 +134,7 @@
 <context>
     <name>AnnotationView</name>
     <message>
-        <location filename="../field_annotations/mapview.py" line="399"/>
+        <location filename="../field_annotations/mapview.py" line="481"/>
         <source>Field annotations</source>
         <translation>Field annotations</translation>
     </message>
@@ -205,7 +205,7 @@
 <context>
     <name>ConfigurationDialogAction</name>
     <message>
-        <location filename="../field_annotations/actions.py" line="323"/>
+        <location filename="../field_annotations/actions.py" line="324"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>

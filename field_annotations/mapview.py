@@ -471,3 +471,14 @@ class AnnotationView(Translatable):
         if escape:
             layerDataSourceUri = layerDataSourceUri.replace('\'', '\'\'')
         return f'{dataProvider.name()}://{layerDataSourceUri}'
+
+    def showAnnotationLayers(self):
+        """Set all annotation layers in the project to visible."""
+        layerTreeRoot = QgsProject.instance().layerTreeRoot()
+
+        for layer in self.main.annotationDb.listAnnotationLayers():
+            layerTreeRoot.findLayer(layer).setItemVisibilityChecked(True)
+
+        annotationGroup = layerTreeRoot.findGroup(self.tr('Field annotations'))
+        if annotationGroup is not None:
+            annotationGroup.setItemVisibilityChecked(True)

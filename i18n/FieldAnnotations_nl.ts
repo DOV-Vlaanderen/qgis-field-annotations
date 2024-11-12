@@ -134,7 +134,7 @@
 <context>
     <name>AnnotationView</name>
     <message>
-        <location filename="../field_annotations/mapview.py" line="399"/>
+        <location filename="../field_annotations/mapview.py" line="481"/>
         <source>Field annotations</source>
         <translation>Veldnotities</translation>
     </message>
@@ -179,7 +179,7 @@
     <message>
         <location filename="../field_annotations/config.py" line="398"/>
         <source>Photo save action</source>
-        <translation>Actie bij opslaan foto&apos;s</translation>
+        <translation>Actie bij opslaan foto's</translation>
     </message>
     <message>
         <location filename="../field_annotations/config.py" line="402"/>
@@ -205,7 +205,7 @@
 <context>
     <name>ConfigurationDialogAction</name>
     <message>
-        <location filename="../field_annotations/actions.py" line="323"/>
+        <location filename="../field_annotations/actions.py" line="324"/>
         <source>Settings</source>
         <translation>Instellingen</translation>
     </message>
@@ -279,12 +279,12 @@
     <message>
         <location filename="../field_annotations/dialog.py" line="318"/>
         <source>&amp;Import photos</source>
-        <translation>&amp;Importeer foto&apos;s</translation>
+        <translation>&amp;Importeer foto's</translation>
     </message>
     <message>
         <location filename="../field_annotations/dialog.py" line="361"/>
         <source>Import photos</source>
-        <translation>Importeer foto&apos;s</translation>
+        <translation>Importeer foto's</translation>
     </message>
     <message>
         <location filename="../field_annotations/dialog.py" line="364"/>

@@ -301,6 +301,7 @@ class ToggleAnnotationViewButton(QtWidgets.QToolButton, Translatable):
         Toggles the annotation view mode between all annotations and annotations
         of visible layers only.
         """
+        self.main.annotationView.showAnnotationLayers()
         self.main.annotationState.toggleAnnotationViewMode()
 
 
