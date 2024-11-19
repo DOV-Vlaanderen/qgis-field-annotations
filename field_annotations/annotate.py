@@ -49,6 +49,7 @@ class AnnotationState(QtCore.QObject):
         self.main = main
 
         self.currentAnnotationType = None
+        self.currentAnnotationLayer = None
         self.isAnnotating = False
 
         self.currentAnnotationViewMode = AnnotationViewMode.AllAnnotations
@@ -71,6 +72,24 @@ class AnnotationState(QtCore.QObject):
         if self.currentAnnotationType is not None:
             self.currentAnnotationType = None
             self.isAnnotating = False
+            self.stateChanged.emit()
+
+    def setCurrentAnnotationLayer(self, layer):
+        """Set current annotation layer.
+
+        Parameters
+        ----------
+        layer : QgsMapLayer
+            Layer to save.
+        """
+        if layer != self.currentAnnotationLayer:
+            self.currentAnnotationLayer = layer
+            self.stateChanged.emit()
+
+    def clearCurrentAnnotationLayer(self):
+        """Clear the current annotation layer."""
+        if self.currentAnnotationLayer is not None:
+            self.currentAnnotationLayer = None
             self.stateChanged.emit()
 
     def setCurrentAnnotationViewMode(self, annotationViewMode):
@@ -261,6 +280,7 @@ class AbstractAnnotator:
         if layer.isEditable():
             layer.endEditCommand()
 
+        self.main.annotationState.clearCurrentAnnotationLayer()
         self.main.annotationState.clearCurrentAnnotationType()
 
 

@@ -94,6 +94,11 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
                 ':/plugins/field_annotations/icons/map.png'), l.name(), l)
             self.layout().addWidget(self.layerSelector)
 
+        currentAnnotationLayerIndex = self.layerSelector.findData(
+            self.main.annotationState.currentAnnotationLayer)
+        if currentAnnotationLayerIndex > -1:
+            self.layerSelector.setCurrentIndex(currentAnnotationLayerIndex)
+
     def addButtonBoxWidget(self):
         """Add the button box widget with the dialog's ok and cancel buttons."""
         buttonBox = QtWidgets.QDialogButtonBox(self)
@@ -168,8 +173,10 @@ class NewAnnotationDialog(QtWidgets.QDialog, Translatable):
         if layer is not None:
             layerUri = self.main.annotationView.getLayerUri(layer)
             layerName = layer.name()
+            self.main.annotationState.setCurrentAnnotationLayer(layer)
         else:
             layerUri = layerName = None
+            self.main.annotationState.clearCurrentAnnotationLayer()
 
         self.layer.editBuffer().changeAttributeValues(
             self.feature.id(), {
