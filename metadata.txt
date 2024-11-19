@@ -5,7 +5,7 @@
 [general]
 name=Field annotations
 qgisMinimumVersion=3.34
-description=A plugin to make annotations and photo's in the field.
+description=Make annotations and photos in the field.
 version=0.1.0
 author=Roel Huybrechts
 email=roel.huybrechts@geosparc.com
