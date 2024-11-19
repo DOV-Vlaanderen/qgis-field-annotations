@@ -2,6 +2,8 @@
 
 A QGIS plugin to make map annotations and photos in the field.
 
+![Preview of field annotations in QGIS](field_annotation_example.png "Preview of field annotations in QGIS")
+
 ## Creating annotations
 
 ### Map annotations
