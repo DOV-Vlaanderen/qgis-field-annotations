@@ -1,6 +1,6 @@
 # QGIS field annotations
 
-A QGIS plugin to make map annotations and photo's in the field.
+A QGIS plugin to make map annotations and photos in the field.
 
 ## Creating annotations
 
@@ -12,6 +12,6 @@ Annotations are stored in separate layers in a Geopackage database in the same d
 
 ### Photo annotations
 
-A special type of annotation is the photo annotation, where you can add an annotation with text and photo(s). Either take some new photo's or import existing ones.
+A special type of annotation is the photo annotation, where you can add an annotation with text and photo(s). Either take some new photos or import existing ones.
 
-Photo's are stored inside a new directory in the same directory as the QGIS project.
+Photos are stored inside a new directory in the same directory as the QGIS project.
